@@ -2,6 +2,8 @@
 
 A self-hosted recipe manager for households and small groups. Keep a shared collection, import recipes from photos, PDFs and websites, and use it on your phone as an installable web app.
 
+![Recipes start page with six illustrated cooking and baking recipes, category labels, favorites and search.](docs/images/recipes-splash.png)
+
 Built with FastAPI, PostgreSQL, Redis/Dramatiq and Caddy. Available in English, German, Spanish, Hindi and Simplified Chinese.
 
 ## Features
