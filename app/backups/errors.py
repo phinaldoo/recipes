@@ -1,0 +1,2 @@
+class InvalidBackup(ValueError):
+    pass

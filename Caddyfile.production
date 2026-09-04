@@ -1,0 +1,66 @@
+{
+	admin off
+	http_port 8081
+}
+
+https://{$APP_DOMAIN}:{$PROXY_INTERNAL_PORT:8080} {
+	encode zstd gzip
+
+	header {
+		-Server
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Cross-Origin-Opener-Policy same-origin
+		Cross-Origin-Resource-Policy same-origin
+		Referrer-Policy strict-origin-when-cross-origin
+		Permissions-Policy "camera=(self), microphone=(), geolocation=()"
+		Content-Security-Policy "default-src 'self'; img-src 'self' data: blob:; style-src 'self'; script-src 'self'; connect-src 'self'; font-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+	}
+
+	@sensitive path /api/* /login /logout /einstellungen* /assets/* /freigabe/*
+	header @sensitive >Cache-Control "no-store"
+
+	@login path /login /api/v1/auth/login
+	handle @login {
+		request_body {
+			max_size 64KB
+		}
+		reverse_proxy app:8000
+	}
+	@large_upload path /api/v1/imports/files /api/v1/settings/restores/preflight
+	handle @large_upload {
+		request_body {
+			max_size 2GB
+		}
+		reverse_proxy app:8000 {
+			transport http {
+				read_timeout 10m
+				write_timeout 10m
+			}
+		}
+	}
+	@medium_upload path /api/v1/imports/json /api/v1/recipes/*/images
+	handle @medium_upload {
+		request_body {
+			max_size 128MB
+		}
+		reverse_proxy app:8000 {
+			transport http {
+				read_timeout 10m
+				write_timeout 10m
+			}
+		}
+	}
+	handle {
+		request_body {
+			max_size 10MB
+		}
+		reverse_proxy app:8000 {
+			transport http {
+				read_timeout 10m
+				write_timeout 10m
+			}
+		}
+	}
+}

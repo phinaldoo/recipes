@@ -1,0 +1,15 @@
+{
+  "name": "rezeptverwaltung-frontend",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
+  "scripts": {
+    "build": "vite build && node scripts/finalize-assets.mjs",
+    "test": "node --test tests/js/*.test.js"
+  },
+  "devDependencies": {
+    "vite": "8.2.2"
+  }
+}

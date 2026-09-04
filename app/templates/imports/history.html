@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% from "imports/_job_card.html" import job_card with context %}
+{% set page_title = t('import.history_title') ~ ' · ' ~ t('recipes.title') %}
+{% block page_id %}import-history{% endblock %}
+{% block content %}
+<nav class="breadcrumb" aria-label="{{ t('a11y.breadcrumb') }}">
+  <a href="/importieren">{{ t('nav.import') }}</a><span aria-hidden="true">/</span><span aria-current="page">{{ t('import.history_title') }}</span>
+</nav>
+<section class="page-heading">
+  <h1>{{ t('import.history_title') }}</h1>
+</section>
+{% if batches %}
+<section class="job-history" aria-label="{{ t('import.history_title') }}">
+  {% for batch in batches %}
+  <section class="history-card import-history-card" data-batch-id="{{ batch.id }}"{% if batch.status in ('queued', 'processing') %} data-batch-poll{% endif %}>
+    <header class="import-history-card__header">
+      <div>
+        <span class="status-badge" data-batch-status>
+          {% if batch.status == 'queued' %}{{ t('import.status.queued') }}{% elif batch.status == 'processing' %}{{ t('import.status.processing') }}{% elif batch.status == 'review' %}{{ t('import.status.review') }}{% elif batch.status == 'completed_with_errors' %}{{ t('import.status.completed_errors') }}{% else %}{{ t('import.status.completed') }}{% endif %}
+        </span>
+        <h2>{{ batch.total_jobs }} {{ tp('common.import.one', 'common.import.other', batch.total_jobs) }}</h2>
+        <time datetime="{{ batch.created_at.isoformat() }}">{{ t('import.started', date=batch.created_at|datetime) }}</time>
+      </div>
+      <a class="button button--text import-history-card__details" href="/importieren/{{ batch.id }}">{{ t('common.details') }} <span aria-hidden="true">→</span></a>
+    </header>
+    <div class="import-history-card__summary" aria-label="{{ t('import.summary') }}">
+      <span><strong data-batch-completed>{{ batch.completed_jobs }}</strong> {{ t('common.done') }}</span>
+      <span><strong data-batch-failed>{{ batch.failed_jobs }}</strong> {{ t('common.failed') }}</span>
+      <span><strong>{{ batch.total_jobs }}</strong> {{ t('common.total') }}</span>
+    </div>
+    <div class="job-list job-list--history">
+      {% for job in batch.jobs %}{{ job_card(job, 'h3') }}{% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+</section>
+<p class="muted batch-poll-note">{{ t('import.auto_history') }}</p>
+{% else %}
+<section class="empty-state">
+  <div class="empty-state__mark" aria-hidden="true">⇧</div>
+  <h2>{{ t('import.empty_history_title') }}</h2>
+  <p>{{ t('import.empty_history_text') }}</p>
+  <a class="button button--primary" href="/importieren">{{ t('import.first') }}</a>
+</section>
+{% endif %}
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ asset('js/import-queue.js') }}"></script>{% endblock %}

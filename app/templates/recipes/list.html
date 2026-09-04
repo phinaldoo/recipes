@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% from "recipes/_kind.html" import recipe_kind_icon with context %}
+{% set selected_recipe_kind = selected_recipe_kind|default(none) %}
+{% set page_title = (t('recipes.trash_title') ~ ' · ' ~ t('recipes.title')) if trash_mode|default(false) else ((t('recipes.kind.' ~ selected_recipe_kind) ~ ' · ' ~ t('recipes.title')) if selected_recipe_kind else t('recipes.title')) %}
+{% set search_action = '/papierkorb' if trash_mode|default(false) else '/rezepte' %}
+{% block page_id %}recipes-list{% endblock %}
+{% block content %}
+<form class="recipe-search" role="search" method="get" action="{{ search_action }}" data-recipe-search>
+  <section class="page-heading page-heading--with-action recipe-search__heading">
+    <div>
+      <h1{% if not trash_mode|default(false) %} data-recipe-kind-heading{% endif %}>{{ t('recipes.trash_title') if trash_mode|default(false) else (t('recipes.kind.' ~ selected_recipe_kind) if selected_recipe_kind else t('recipes.title')) }}</h1>
+    </div>
+    <div class="recipe-search__actions">
+      {% if trash_mode|default(false) %}<a class="button button--secondary" href="/rezepte">{{ t('recipes.back') }}</a>{% endif %}
+      {% if not trash_mode|default(false) %}<details class="filter-popover" data-dropdown {% if selected_category_ids %}open{% endif %}>
+        <summary class="button button--secondary" data-recipe-filter-summary>{{ t('recipes.filter') }}{% if selected_category_ids %} · {{ selected_category_ids|length }}{% endif %}</summary>
+        <div class="filter-panel">
+          <fieldset>
+            <legend>{{ t('recipes.combine_categories') }}</legend>
+            <p class="muted filter-panel__hint">{{ t('recipes.parent_includes_children') }}</p>
+            {% if categories %}
+            <label class="filter-category-search">
+              <span class="sr-only">{{ t('recipes.search_categories') }}</span>
+              <input type="search" placeholder="{{ t('recipes.search_categories') }} …" autocomplete="off" data-category-filter>
+            </label>
+            <div class="filter-list" data-category-filter-list>
+              {% for category in categories %}
+              <label class="check-row depth-{{ [category.path.split(' › ')|length - 1, 5]|min }}" data-category-name="{{ category.name }}">
+                <input type="checkbox" name="category_ids" value="{{ category.id }}" data-auto-submit {% if category.id|string in selected_category_ids %}checked{% endif %}>
+                <span>{{ category.name }}</span>
+              </label>
+              {% endfor %}
+            </div>
+            <p class="filter-list__empty muted" role="status" data-category-filter-empty hidden>{{ t('recipes.no_matching_categories') }}</p>
+            {% else %}<p class="muted">{{ t('recipes.no_categories') }}</p>{% endif %}
+          </fieldset>
+          <div class="filter-panel__actions">
+            <a class="button button--text" href="/rezepte{% if q or selected_recipe_kind %}?{% if q %}q={{ q|urlencode }}{% endif %}{% if q and selected_recipe_kind %}&{% endif %}{% if selected_recipe_kind %}recipe_kind={{ selected_recipe_kind }}{% endif %}{% endif %}" data-recipe-search-link>{{ t('common.reset') }}</a>
+          </div>
+        </div>
+      </details>{% endif %}
+      <label class="sort-select">
+        <span class="sr-only">{{ t('recipes.sort') }}</span>
+        <select name="sort" data-auto-submit>
+          <option value="updated_desc" {% if sort == 'updated_desc' %}selected{% endif %}>{{ t('recipes.sort.updated') }}</option>
+          <option value="created_desc" {% if sort == 'created_desc' %}selected{% endif %}>{{ t('recipes.sort.created') }}</option>
+          <option value="title_asc" {% if sort == 'title_asc' %}selected{% endif %}>{{ t('recipes.sort.title') }}</option>
+        </select>
+      </label>
+    </div>
+  </section>
+  {% if not trash_mode|default(false) %}
+  <fieldset class="recipe-kind-switch recipe-search__kind" data-recipe-kind-switch>
+    <legend class="sr-only">{{ t('recipes.kind_filter') }}</legend>
+    {% for kind in ['all', 'cooking', 'baking'] %}
+    <label class="recipe-kind-option recipe-kind-option--{{ kind }}">
+      <input type="radio" name="recipe_kind" value="{{ '' if kind == 'all' else kind }}" data-auto-submit {% if (kind == 'all' and not selected_recipe_kind) or kind == selected_recipe_kind %}checked{% endif %}>
+      <span>{{ recipe_kind_icon(kind) }}<span>{{ t('recipes.kind.' ~ kind) }}</span></span>
+    </label>
+    {% endfor %}
+  </fieldset>
+  {% endif %}
+  <label class="sr-only" for="recipe-query">{{ t('recipes.search_label') }}</label>
+  <div class="search-field">
+    <span aria-hidden="true">⌕</span>
+    <input id="recipe-query" name="q" type="search" value="{{ q }}" maxlength="300" placeholder="{{ t('recipes.search_placeholder') }}" autocomplete="off" aria-controls="recipe-results-region">
+    <a href="{{ search_action }}" class="icon-button" aria-label="{{ t('recipes.clear_search') }}" data-recipe-search-link data-recipe-search-clear {% if not q %}hidden{% endif %}>×</a>
+  </div>
+</form>
+
+{% include "recipes/_results.html" %}
+{% endblock %}
+{% block scripts %}
+<script type="module" src="{{ asset('js/recipe-search.js') }}"></script>
+{% if not trash_mode|default(false) %}<script type="module" src="{{ asset('js/productivity.js') }}"></script>{% endif %}
+{% endblock %}

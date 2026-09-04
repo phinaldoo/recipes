@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% from "recipes/_nutrition.html" import nutrition_editor with context %}
+{% from "recipes/_kind.html" import recipe_kind_icon with context %}
+{% set page_title = (t('form.recipe.edit') if recipe else t('form.recipe.create')) ~ " · " ~ t('recipes.title') %}
+{% block page_id %}recipe-form{% endblock %}
+{% block content %}
+<nav class="breadcrumb" aria-label="{{ t('a11y.breadcrumb') }}"><a href="/rezepte">{{ t('recipes.title') }}</a><span aria-hidden="true">/</span><span aria-current="page">{{ t('common.edit') if recipe else t('form.new') }}</span></nav>
+<section class="page-heading">
+  <h1>{{ t('form.recipe.edit') if recipe else t('form.recipe.create') }}</h1>
+</section>
+
+<div class="form-layout">
+  <nav class="form-toc" aria-label="{{ t('form.sections') }}">
+    <a href="#grunddaten">{{ t('form.basic') }}</a><a href="#zutaten">{{ t('recipe.ingredients') }}</a><a href="#zubereitung">{{ t('recipe.instructions') }}</a><a href="#naehrwerte">{{ t('nutrition.label') }}</a><a href="#bilder">{{ t('recipe.gallery') }}</a><a href="#kategorien-auswahl">{{ t('nav.categories') }} &amp; {{ t('form.tags') }}</a><a href="#hinweise-quelle">{{ t('form.context') }}</a>
+  </nav>
+  <form class="recipe-form" data-recipe-form data-mode="{{ mode }}" data-recipe-id="{{ recipe.id if recipe else '' }}" novalidate>
+    <div class="alert alert--error" data-form-errors role="alert" tabindex="-1" hidden><h2>{{ t('form.review') }}</h2><ul></ul></div>
+    <section class="form-section" id="grunddaten" aria-labelledby="grunddaten-title">
+      <div class="form-section__heading"><span>01</span><div><h2 id="grunddaten-title">{{ t('form.basic') }}</h2><p>{{ t('form.basic_lede') }}</p></div></div>
+      <div class="form-grid">
+        <fieldset class="field field--full recipe-kind-picker">
+          <legend>{{ t('form.recipe_kind') }} <span aria-hidden="true">*</span></legend>
+          <div class="recipe-kind-picker__options">
+            {% for kind in ['cooking', 'baking'] %}
+            <label class="recipe-kind-choice recipe-kind-choice--{{ kind }}">
+              <input type="radio" name="recipe_kind" value="{{ kind }}" required {% if (recipe and recipe.recipe_kind|default('cooking') == kind) or (not recipe and kind == 'cooking') %}checked{% endif %}>
+              <span>{{ recipe_kind_icon(kind) }}<span><strong>{{ t('recipes.kind.' ~ kind) }}</strong><small>{{ t('form.recipe_kind.' ~ kind ~ '_help') }}</small></span></span>
+            </label>
+            {% endfor %}
+          </div>
+          <p class="field-help">{{ t('form.recipe_kind_help') }}</p>
+          <p class="field-error" data-error-for="recipe_kind"></p>
+        </fieldset>
+        <div class="field field--full"><label for="title">{{ t('form.title') }} <span aria-hidden="true">*</span></label><input id="title" name="title" type="text" maxlength="300" value="{{ recipe.title if recipe else '' }}" required><p class="field-error" data-error-for="title"></p></div>
+        <div class="field field--full"><label for="description">{{ t('form.description') }}</label><textarea id="description" name="description" rows="3" maxlength="20000">{{ recipe.description if recipe and recipe.description else '' }}</textarea></div>
+        <div class="field"><label for="base-servings">{{ t('form.base_servings') }} <span aria-hidden="true">*</span></label><input id="base-servings" name="base_servings" type="text" inputmode="decimal" value="{{ recipe.base_servings|format_amount if recipe else '4' }}" required><p class="field-error" data-error-for="base_servings"></p></div>
+        <div class="field"><label for="serving-label">{{ t('form.serving_label') }}</label><input id="serving-label" name="serving_label" type="text" maxlength="80" value="{{ recipe.serving_label if recipe else default_serving_label }}" placeholder="{{ t('form.serving_placeholder') }}"></div>
+        <div class="field"><label for="prep-time">{{ t('form.prep_minutes') }}</label><input id="prep-time" name="prep_time_minutes" type="number" min="0" step="1" inputmode="numeric" value="{{ recipe.prep_time_minutes if recipe and recipe.prep_time_minutes is not none else '' }}"></div>
+        <div class="field"><label for="cook-time">{{ t('form.cook_minutes') }}</label><input id="cook-time" name="cook_time_minutes" type="number" min="0" step="1" inputmode="numeric" value="{{ recipe.cook_time_minutes if recipe and recipe.cook_time_minutes is not none else '' }}"></div>
+        <div class="field"><label for="rest-time">{{ t('form.rest_minutes') }}</label><input id="rest-time" name="rest_time_minutes" type="number" min="0" step="1" inputmode="numeric" value="{{ recipe.rest_time_minutes if recipe and recipe.rest_time_minutes is not none else '' }}"></div>
+        <div class="field"><label for="total-time">{{ t('form.total_minutes') }}</label><input id="total-time" name="total_time_minutes" type="number" min="0" step="1" inputmode="numeric" value="{{ recipe.total_time_minutes if recipe and recipe.total_time_minutes is not none else '' }}" {% if not recipe or not recipe.total_time_is_manual %}readonly{% endif %}><label class="check-row check-row--compact"><input name="total_time_is_manual" type="checkbox" {% if recipe and recipe.total_time_is_manual %}checked{% endif %}><span>{{ t('form.total_manual') }}</span></label></div>
+      </div>
+    </section>
+
+    <section class="form-section" id="zutaten" aria-labelledby="zutaten-title">
+      <div class="form-section__heading"><span>02</span><div><h2 id="zutaten-title">{{ t('recipe.ingredients') }}</h2><p>{{ t('form.ingredients_lede') }}</p></div></div>
+      <div data-ingredient-groups>
+        {% for group in recipe.ingredient_groups if recipe %}
+        <fieldset class="ingredient-group-editor" data-ingredient-group><legend>{{ t('form.ingredient_group', number=loop.index) }}</legend>
+          <div class="group-toolbar"><label>{{ t('form.group_name') }} <input data-group-title type="text" maxlength="300" value="{{ group.title or '' }}" placeholder="{{ t('form.group_placeholder') }}"></label><button class="button button--text danger-link" type="button" data-remove-group>{{ t('form.remove_group') }}</button></div>
+          <div data-ingredient-rows>
+            {% for item in group.ingredients %}
+            <div class="ingredient-row" data-ingredient-row><span class="drag-handle" aria-hidden="true">⋮⋮</span><label><span>{{ t('form.amount') }}</span><input data-amount-min type="text" inputmode="decimal" value="{{ item.amount_min|format_amount }}"></label><label><span>{{ t('form.to') }}</span><input data-amount-max type="text" inputmode="decimal" value="{{ item.amount_max|format_amount }}"></label><label><span>{{ t('form.unit') }}</span><input data-unit type="text" maxlength="80" value="{{ item.unit or '' }}"></label><label class="ingredient-row__name"><span>{{ t('form.ingredient') }}</span><input data-name type="text" maxlength="500" value="{{ item.name }}"></label><label><span>{{ t('form.note') }}</span><input data-note type="text" maxlength="1000" value="{{ item.note or '' }}"></label><label class="check-row check-row--compact"><input data-scalable type="checkbox" {% if item.is_scalable %}checked{% endif %}><span>{{ t('form.scale') }}</span></label><div class="row-actions"><button class="icon-button" type="button" data-move-up aria-label="{{ t('form.ingredient_up') }}">↑</button><button class="icon-button" type="button" data-move-down aria-label="{{ t('form.ingredient_down') }}">↓</button><button class="icon-button danger-link" type="button" data-remove-row aria-label="{{ t('form.ingredient_remove') }}">×</button></div></div>
+            {% endfor %}
+          </div>
+          <button class="button button--secondary button--small" type="button" data-add-ingredient>＋ {{ t('form.ingredient_add') }}</button>
+        </fieldset>
+        {% else %}
+        <fieldset class="ingredient-group-editor" data-ingredient-group><legend>{{ t('form.ingredient_group', number=1) }}</legend><div class="group-toolbar"><label>{{ t('form.group_name') }} <input data-group-title type="text" maxlength="300" placeholder="{{ t('form.group_placeholder') }}"></label><button class="button button--text danger-link" type="button" data-remove-group>{{ t('form.remove_group') }}</button></div><div data-ingredient-rows></div><button class="button button--secondary button--small" type="button" data-add-ingredient>＋ {{ t('form.ingredient_add') }}</button></fieldset>
+        {% endfor %}
+      </div>
+      <button class="button button--secondary" type="button" data-add-group>＋ {{ t('form.group_add') }}</button>
+    </section>
+
+    <section class="form-section" id="zubereitung" aria-labelledby="zubereitung-title">
+      <div class="form-section__heading"><span>03</span><div><h2 id="zubereitung-title">{{ t('recipe.instructions') }}</h2><p>{{ t('form.instructions_lede') }}</p></div></div>
+      <div class="step-editor" data-step-list>
+        {% for step in recipe.instruction_steps if recipe %}<div class="step-row" data-step-row><span class="step-row__number">{{ loop.index }}</span><label><span class="sr-only">{{ t('form.step', number=loop.index) }}</span><textarea data-step-text rows="3" maxlength="20000">{{ step.text }}</textarea></label><div class="row-actions"><button class="icon-button" type="button" data-move-up aria-label="{{ t('form.step_up') }}">↑</button><button class="icon-button" type="button" data-move-down aria-label="{{ t('form.step_down') }}">↓</button><button class="icon-button danger-link" type="button" data-remove-step aria-label="{{ t('form.step_remove') }}">×</button></div></div>{% endfor %}
+      </div>
+      <button class="button button--secondary" type="button" data-add-step>＋ {{ t('form.step_add') }}</button>
+    </section>
+
+    <section class="form-section" id="naehrwerte" aria-labelledby="naehrwerte-title">
+      <div class="form-section__heading"><span>04</span><div><h2 id="naehrwerte-title">{{ t('recipe.nutrition') }}</h2><p>{{ t('form.nutrition_lede') }}</p></div></div>
+      <div class="nutrition-editors">
+        {{ nutrition_editor(recipe.nutrition_per_serving if recipe else none, "per_serving", t('nutrition.per_serving'), "nutrition-serving") }}
+        {{ nutrition_editor(recipe.nutrition_per_100g_ml if recipe else none, "per_100g_ml", t('nutrition.per_100'), "nutrition-100g") }}
+      </div>
+      <p class="field-help">{{ t('form.nutrition_help') }}</p>
+    </section>
+
+    <section class="form-section" id="bilder" aria-labelledby="bilder-title">
+      <div class="form-section__heading"><span>05</span><div><h2 id="bilder-title">{{ t('recipe.gallery') }}</h2><p>{{ t('form.images_lede') }}</p></div></div>
+      {% if recipe and recipe.images %}<div class="image-editor-grid">{% for image in recipe.images %}<figure data-existing-image data-image-id="{{ image.id }}"><img src="/api/v1/assets/{{ image.thumbnail_asset_id or image.media_asset_id }}/view" alt=""><figcaption>{% if image.is_cover %}<span class="status-badge">{{ t('form.cover') }}</span>{% endif %}{{ t('form.image_number', number=loop.index) }}</figcaption><label class="field"><span>{{ t('form.caption') }}</span><input type="text" maxlength="1000" value="{{ image.caption or '' }}" data-image-caption></label><label class="field"><span>{{ t('form.alt_text') }}</span><input type="text" maxlength="1000" value="{{ image.alt_text or '' }}" data-image-alt></label><div class="button-group"><button class="button button--text" type="button" data-move-image-up aria-label="{{ t('form.image_forward') }}">←</button><button class="button button--text" type="button" data-move-image-down aria-label="{{ t('form.image_back') }}">→</button><button class="button button--text" type="button" data-set-cover {% if image.is_cover %}disabled{% endif %}>{{ t('form.set_cover') }}</button><button class="button button--secondary button--small" type="button" data-save-image>{{ t('form.save_details') }}</button><button class="button button--text danger-link" type="button" data-remove-image>{{ t('common.remove') }}</button></div></figure>{% endfor %}</div>{% endif %}
+      <div class="upload-zone" data-image-paste-zone tabindex="0" role="group" aria-labelledby="image-paste-title" aria-describedby="image-paste-help image-format-help">
+        <span class="upload-zone__icon" aria-hidden="true">▣</span>
+        <strong id="image-paste-title">{{ t('form.paste_image') }}</strong>
+        <span id="image-paste-help">{{ t('form.paste_help') }}</span>
+        <span class="upload-zone__divider" aria-hidden="true">{{ t('form.or') }}</span>
+        <label class="button button--secondary button--small" for="recipe-images">{{ t('form.choose_device') }}</label>
+        <span id="image-format-help" class="upload-zone__formats">{{ t('form.image_formats') }}</span>
+        <input id="recipe-images" data-image-files type="file" accept=".jpg,.jpeg,.png,.webp,.gif,.heic,.heif,image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif" multiple>
+      </div>
+      <p class="image-upload-message" data-image-message role="status" aria-live="polite" hidden></p>
+      <div class="upload-preview" data-image-preview aria-label="{{ t('form.new_images') }}" hidden></div>
+    </section>
+
+    <section class="form-section" id="kategorien-auswahl" aria-labelledby="kategorien-title">
+      <div class="form-section__heading"><span>06</span><div><h2 id="kategorien-title">{{ t('nav.categories') }}</h2><p>{{ t('form.categories_lede') }}</p></div></div>
+      <div class="category-picker" data-category-picker>
+        <div class="field"><label for="category-search">{{ t('recipes.search_categories') }}</label><input id="category-search" type="search" placeholder="{{ t('form.category_search_placeholder') }}" data-category-search autocomplete="off"></div>
+        <p class="category-counter" data-category-count>{{ t('form.category_count', count=recipe.categories|length if recipe else 0) }}</p>
+        <div class="category-options" role="group" aria-label="{{ t('form.existing_categories') }}">
+          {% for category in categories %}<label class="check-row" data-category-option data-search="{{ category.path|lower }}"><input type="checkbox" value="{{ category.id }}" data-path="{{ category.path }}" {% if recipe and category in recipe.categories %}checked{% endif %}><span>{{ category.path }}</span></label>{% endfor %}
+          {% if not categories %}<p class="muted">{{ t('form.no_categories') }}</p>{% endif %}
+        </div>
+        <div class="inline-create"><label for="new-category-path">{{ t('form.new_category_path') }}</label><div class="inline-create__row"><input id="new-category-path" data-new-category type="text" maxlength="1000" placeholder="{{ t('form.category_path_placeholder') }}"><button class="button button--secondary" type="button" data-add-category-path>{{ t('common.add') }}</button></div><p class="field-help">{{ t('form.category_path_help') }}</p></div>
+        <div class="chip-row" data-selected-categories aria-live="polite"></div>
+      </div>
+      <div class="field tag-input"><label for="recipe-tags">{{ t('form.tags') }}</label><input id="recipe-tags" name="tags" type="text" maxlength="2100" value="{{ recipe.tags|map(attribute='name')|join(', ') if recipe else '' }}" placeholder="{{ t('form.tags_placeholder') }}"><p class="field-help">{{ t('form.tags_help') }}</p></div>
+    </section>
+
+    <section class="form-section" id="hinweise-quelle" aria-labelledby="hinweise-title">
+      <div class="form-section__heading"><span>07</span><div><h2 id="hinweise-title">{{ t('form.context') }}</h2><p>{{ t('form.context_lede') }}</p></div></div>
+      <div class="form-grid"><div class="field field--full"><label for="notes">{{ t('common.notes') }}</label><textarea id="notes" name="notes" rows="5" maxlength="50000">{{ recipe.notes if recipe and recipe.notes else '' }}</textarea></div><div class="field"><label for="source-title">{{ t('form.source_title') }}</label><input id="source-title" name="source_title" type="text" maxlength="500" value="{{ recipe.source.title if recipe and recipe.source and recipe.source.title else '' }}" placeholder="{{ t('form.source_title_placeholder') }}"></div><div class="field"><label for="source-url">{{ t('form.source_url') }}</label><input id="source-url" name="source_url" type="url" inputmode="url" value="{{ recipe.source.url if recipe and recipe.source and recipe.source.url else '' }}" placeholder="https://…"></div></div>
+    </section>
+
+    <div class="form-actions"><a class="button button--secondary" href="{{ '/rezepte/' ~ recipe.id if recipe else '/rezepte' }}">{{ t('common.cancel') }}</a><button class="button button--primary" type="submit" data-save-button>{{ t('form.save_changes') if recipe else t('form.save_recipe') }}</button></div>
+    {% if recipe %}<input type="hidden" name="expected_updated_at" value="{{ recipe.updated_at.isoformat() }}">{% endif %}
+  </form>
+</div>
+
+<template id="ingredient-row-template"><div class="ingredient-row" data-ingredient-row><span class="drag-handle" aria-hidden="true">⋮⋮</span><label><span>{{ t('form.amount') }}</span><input data-amount-min type="text" inputmode="decimal"></label><label><span>{{ t('form.to') }}</span><input data-amount-max type="text" inputmode="decimal"></label><label><span>{{ t('form.unit') }}</span><input data-unit type="text" maxlength="80"></label><label class="ingredient-row__name"><span>{{ t('form.ingredient') }}</span><input data-name type="text" maxlength="500"></label><label><span>{{ t('form.note') }}</span><input data-note type="text" maxlength="1000"></label><label class="check-row check-row--compact"><input data-scalable type="checkbox" checked><span>{{ t('form.scale') }}</span></label><div class="row-actions"><button class="icon-button" type="button" data-move-up aria-label="{{ t('form.ingredient_up') }}">↑</button><button class="icon-button" type="button" data-move-down aria-label="{{ t('form.ingredient_down') }}">↓</button><button class="icon-button danger-link" type="button" data-remove-row aria-label="{{ t('form.ingredient_remove') }}">×</button></div></div></template>
+<template id="ingredient-group-template"><fieldset class="ingredient-group-editor" data-ingredient-group><legend>{{ t('form.ingredient_group', number='') }}</legend><div class="group-toolbar"><label>{{ t('form.group_name') }} <input data-group-title type="text" maxlength="300" placeholder="{{ t('common.optional') }}"></label><button class="button button--text danger-link" type="button" data-remove-group>{{ t('form.remove_group') }}</button></div><div data-ingredient-rows></div><button class="button button--secondary button--small" type="button" data-add-ingredient>＋ {{ t('form.ingredient_add') }}</button></fieldset></template>
+<template id="step-row-template"><div class="step-row" data-step-row><span class="step-row__number"></span><label><span class="sr-only">{{ t('form.step', number='') }}</span><textarea data-step-text rows="3" maxlength="20000"></textarea></label><div class="row-actions"><button class="icon-button" type="button" data-move-up aria-label="{{ t('form.step_up') }}">↑</button><button class="icon-button" type="button" data-move-down aria-label="{{ t('form.step_down') }}">↓</button><button class="icon-button danger-link" type="button" data-remove-step aria-label="{{ t('form.step_remove') }}">×</button></div></div></template>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ asset('js/recipe-form.js') }}"></script>{% endblock %}

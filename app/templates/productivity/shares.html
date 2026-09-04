@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% set page_title = t('share.title') ~ ' · ' ~ recipe.title %}
+{% block page_id %}recipe-shares{% endblock %}
+{% block content %}
+<nav class="breadcrumb" aria-label="{{ t('a11y.breadcrumb') }}">
+  <a href="/rezepte/{{ recipe.id }}">{{ recipe.title }}</a>
+  <span aria-hidden="true">/</span>
+  <span aria-current="page">{{ t('share.breadcrumb') }}</span>
+</nav>
+
+<section class="page-heading share-page-heading">
+  <h1>{{ t('share.heading', title=recipe.title) }}</h1>
+  <div class="share-assurances" aria-label="{{ t('share.properties') }}">
+    <span><span class="share-assurances__mark" aria-hidden="true">✓</span>{{ t('share.only_recipe') }}</span>
+    <span><span class="share-assurances__mark" aria-hidden="true">✓</span>{{ t('share.revocable') }}</span>
+  </div>
+</section>
+
+<div class="share-layout">
+  <section class="productivity-card share-card share-card--create" aria-labelledby="new-share-title">
+    <header class="productivity-card__header">
+      <div>
+        <h2 id="new-share-title">{{ t('share.create_title') }}</h2>
+        <p>{{ t('share.create_text') }}</p>
+      </div>
+      <span class="share-card__mark" aria-hidden="true">↗</span>
+    </header>
+
+    <form class="share-form" data-share-form data-recipe-id="{{ recipe.id }}">
+      <div class="field">
+        <label for="share-expiry">{{ t('share.validity') }}</label>
+        <div class="sort-select share-duration-select">
+          <select id="share-expiry" name="expires_in_days">
+            <option value="7">{{ t('share.days', count=7) }}</option>
+            <option value="30" selected>{{ t('share.days', count=30) }}</option>
+            <option value="90">{{ t('share.days', count=90) }}</option>
+            <option value="365">{{ t('share.year') }}</option>
+            <option value="">{{ t('share.no_expiry') }}</option>
+          </select>
+        </div>
+        <p class="field-help">{{ t('share.expiry_help') }}</p>
+      </div>
+      <button class="button button--primary share-form__submit" type="submit">
+        <span>{{ t('share.create') }}</span><span aria-hidden="true">→</span>
+      </button>
+    </form>
+
+    <div class="share-result" data-share-result role="status" aria-live="polite" hidden>
+      <div class="share-result__intro">
+        <span class="share-result__mark" aria-hidden="true">✓</span>
+        <p><strong>{{ t('share.created_title') }}</strong><span>{{ t('share.created_text') }}</span></p>
+      </div>
+      <div class="copy-field">
+        <input readonly data-share-url aria-label="{{ t('share.created_url') }}">
+        <button class="button button--secondary" type="button" data-copy-share>{{ t('share.copy') }}</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="productivity-card share-card share-card--list" aria-labelledby="existing-shares-title">
+    <header class="productivity-card__header">
+      <div>
+        <h2 id="existing-shares-title">{{ t('share.existing_title') }}</h2>
+        <p>{{ t('share.existing_text') }}</p>
+      </div>
+      <span class="management-count" data-share-count aria-live="polite">{{ shares|length }} {{ tp('share.one', 'share.other', shares|length) }}</span>
+    </header>
+
+    <ul class="management-list share-list" data-share-list aria-label="{{ t('share.existing_list') }}">
+      {% for share in shares %}
+      <li class="share-list__item" data-share-id="{{ share.id }}">
+        <span class="management-list__copy">
+          <strong>{{ t('share.link', prefix=share.token_prefix) }}</strong>
+          <small>{{ t('share.created', date=share.created_at|datetime) }}{% if share.expires_at %} · {{ t('share.valid_until', date=share.expires_at|datetime) }}{% else %} · {{ t('share.no_expiry') }}{% endif %}{% if share.last_accessed_at %} · {{ t('share.last_opened', date=share.last_accessed_at|datetime) }}{% endif %}</small>
+        </span>
+        {% if share.revoked_at %}
+        <span class="status-badge">{{ t('share.revoked') }}</span>
+        {% elif share.expires_at and share.expires_at <= now %}
+        <span class="status-badge">{{ t('share.expired') }}</span>
+        {% else %}
+        <button class="button button--text danger-link" type="button" data-share-revoke>{{ t('share.revoke') }}</button>
+        {% endif %}
+      </li>
+      {% else %}
+      <li class="empty-inline management-empty share-empty">
+        <span class="management-empty__mark" aria-hidden="true">↗</span>
+        <span>
+          <strong>{{ t('share.empty_title') }}</strong>
+          <small>{{ t('share.empty_text') }}</small>
+        </span>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ asset('js/productivity.js') }}"></script>{% endblock %}

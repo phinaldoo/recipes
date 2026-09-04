@@ -1,0 +1,19 @@
+{% extends "base.html" %}{% from "imports/_job_card.html" import job_card with context %}{% from "imports/_candidate_card.html" import candidate_card with context %}{% set page_title = t('import.progress_title') ~ ' · ' ~ t('recipes.title') %}{% block page_id %}import-batch{% endblock %}
+{% block content %}<nav class="breadcrumb" aria-label="{{ t('a11y.breadcrumb') }}"><a href="/importieren">{{ t('nav.import') }}</a><span aria-hidden="true">/</span><span aria-current="page">{{ t('import.progress') }}</span></nav><section class="page-heading"><h1>{% if batch.status == 'review' %}{{ t('import.review_title') }}{% elif batch.status in ('completed', 'completed_with_errors') %}{{ t('import.completed_title') }}{% else %}{{ t('import.preparing_title') }}{% endif %}</h1></section>
+<section class="batch-summary" data-batch-id="{{ batch.id }}" {% if batch.status in ('queued', 'processing') %}data-batch-poll{% endif %} data-batch-status-value="{{ batch.status }}"><div><strong data-batch-completed>{{ batch.completed_jobs }}</strong><span>{{ t('common.done') }}</span></div><div><strong>{{ batch.total_jobs }}</strong><span>{{ tp('common.file.one', 'common.file.other', batch.total_jobs) }}</span></div><div><strong data-batch-failed>{{ batch.failed_jobs }}</strong><span>{{ t('common.failed') }}</span></div></section>
+<div class="job-list" data-job-list aria-live="polite">{% for job in batch.jobs %}{{ job_card(job) }}{% endfor %}</div>
+{% if batch.status == 'review' %}
+<section class="candidate-review" data-candidate-review data-batch-id="{{ batch.id }}">
+  <div class="candidate-review__heading">
+    <div>
+      <h2>{{ t('import.found_recipes') }}</h2>
+      <p data-candidate-selected-count>{{ t('import.selected_count', count=0) }}</p>
+    </div>
+    <button class="button button--text" type="button" data-candidate-toggle-all>{{ t('common.deselect_all') }}</button>
+  </div>
+  <div class="candidate-grid">{% for job in batch.jobs %}{% for candidate in job.candidates %}{{ candidate_card(candidate) }}{% endfor %}{% endfor %}</div>
+  <div class="alert" data-candidate-message role="status" hidden></div>
+  <div class="candidate-review__actions"><a class="button button--secondary" href="/importieren">{{ t('import.decide_later') }}</a><button class="button button--primary" type="button" data-confirm-candidates>{{ t('import.confirm_selected') }}</button></div>
+</section>
+{% elif batch.status in ('queued', 'processing') %}<p class="muted batch-poll-note">{{ t('import.auto_update') }}</p>{% endif %}{% endblock %}
+{% block scripts %}<script type="module" src="{{ asset('js/import-queue.js') }}"></script>{% endblock %}

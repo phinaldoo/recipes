@@ -1,0 +1,9 @@
+<div
+  data-recipe-batch
+  data-page="{{ page }}"
+  data-pages="{{ pages }}"
+  data-total="{{ total }}"
+  {% if page < pages %}data-next-url="?q={{ q|urlencode }}&sort={{ sort }}&page={{ page + 1 }}{% if selected_recipe_kind %}&recipe_kind={{ selected_recipe_kind }}{% endif %}{% for id in selected_category_ids %}&category_ids={{ id }}{% endfor %}"{% endif %}
+>
+  {% include "recipes/_cards.html" %}
+</div>

@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="{{ locale }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#18181b">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="{{ t('app.name') }}">
+  <meta name="csrf-token" content="{{ csrf_token|default('') }}">
+  <meta name="description" content="{{ page_description|default(t('app.description')) }}">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="{{ page_title|default(t('app.name')) }}">
+  <meta property="og:description" content="{{ page_description|default(t('app.tagline')) }}">
+  <meta property="og:image" content="{{ og_image|default(app_base_url ~ asset('pwa/og.png')) }}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ page_title|default(t('app.name')) }}">
+  <meta name="twitter:description" content="{{ page_description|default(t('app.tagline')) }}">
+  <meta name="twitter:image" content="{{ og_image|default(app_base_url ~ asset('pwa/og.png')) }}">
+  <meta name="pwa-enabled" content="{{ 'true' if pwa_enabled|default(false) else 'false' }}">
+  {% if pwa_enabled|default(false) %}<link rel="manifest" href="{{ pwa_manifest_url }}">{% endif %}
+  <link rel="apple-touch-icon" href="{{ asset('pwa/apple-touch-icon.png') }}">
+  <link rel="icon" href="{{ asset('pwa/icon.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+  <title>{{ page_title|default(t('app.name')) }}</title>
+  {% block head %}{% endblock %}
+</head>
+<body data-page="{% block page_id %}default{% endblock %}">
+  <a class="skip-link" href="#main-content">{{ t("nav.skip") }}</a>
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="brand" href="/rezepte" aria-label="{{ t('nav.recipes') }}">
+        <span class="brand__mark" aria-hidden="true">R</span>
+        <span>{{ t("app.name") }}</span>
+      </a>
+      {% if current_user %}
+      <nav class="desktop-nav" aria-label="{{ t('nav.main') }}">
+        <a href="/rezepte" {% if request.url.path == '/rezepte' %}aria-current="page"{% endif %}>{{ t("nav.recipes") }}</a>
+        <a href="/favoriten" {% if request.url.path == '/favoriten' %}aria-current="page"{% endif %}>{{ t("nav.favorites") }}</a>
+        <a href="/notizen" {% if request.url.path == '/notizen' %}aria-current="page"{% endif %}>{{ t("nav.notes") }}</a>
+        <a href="/kategorien" {% if request.url.path == '/kategorien' %}aria-current="page"{% endif %}>{{ t("nav.categories") }}</a>
+        <a href="/schlagwoerter" {% if request.url.path == '/schlagwoerter' %}aria-current="page"{% endif %}>{{ t("nav.tags") }}</a>
+        <details class="action-menu add-recipe-menu" data-dropdown>
+          <summary class="button button--primary button--small">
+            {{ t("nav.add_recipe") }}
+            <span class="add-recipe-menu__chevron" aria-hidden="true"></span>
+          </summary>
+          <div class="action-menu__panel add-recipe-menu__panel">
+            <a href="/importieren" {% if request.url.path.startswith('/importieren') %}aria-current="page"{% endif %}>{{ t("nav.import") }}</a>
+            <a href="/rezepte/neu" {% if request.url.path == '/rezepte/neu' %}aria-current="page"{% endif %}>{{ t("nav.create") }}</a>
+          </div>
+        </details>
+      </nav>
+      <details class="account-menu" data-dropdown>
+        <summary aria-label="{{ t('account.menu', name=current_user.visible_name) }}">
+          <span class="avatar" aria-hidden="true">{{ current_user.visible_name[:1]|upper }}</span>
+        </summary>
+        <div class="account-menu__panel">
+          <p class="account-menu__identity">{{ current_user.visible_name }}</p>
+          <p class="account-menu__meta">{{ current_user.email }} · {{ t('account.admin') if current_user.role == 'admin' else t('account.member') }}</p>
+          <a href="/konto">{{ t("nav.account") }}</a>
+          {% if current_user.role == 'admin' %}<a href="/einstellungen">{{ t("nav.admin_settings") }}</a>{% endif %}
+          <a href="/papierkorb">{{ t("nav.trash") }}</a>
+          <form method="post" action="/logout">
+            <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+            <button class="button button--text" type="submit">{{ t("nav.logout") }}</button>
+          </form>
+        </div>
+      </details>
+      {% endif %}
+    </div>
+  </header>
+
+  <main id="main-content" class="page-shell" tabindex="-1">
+    {% block content %}{% endblock %}
+  </main>
+
+  {% if current_user %}
+  <nav class="mobile-nav" aria-label="{{ t('nav.mobile') }}">
+    <a href="/rezepte" {% if request.url.path == '/rezepte' %}aria-current="page"{% endif %}>
+      <span aria-hidden="true">⌂</span><span>{{ t("nav.recipes") }}</span>
+    </a>
+    <a href="/rezepte/neu" {% if request.url.path == '/rezepte/neu' %}aria-current="page"{% endif %}>
+      <span aria-hidden="true">＋</span><span>{{ t("nav.new") }}</span>
+    </a>
+    <a href="/importieren" {% if request.url.path.startswith('/importieren') %}aria-current="page"{% endif %}>
+      <span aria-hidden="true">⇧</span><span>{{ t("nav.import") }}</span>
+    </a>
+    <button type="button" data-mobile-more {% if request.url.path == '/notizen' %}aria-current="page"{% endif %}>
+      <span aria-hidden="true">•••</span><span>{{ t("nav.more") }}</span>
+    </button>
+  </nav>
+  <dialog class="mobile-more" data-mobile-more-dialog aria-labelledby="mobile-more-title">
+    <div class="dialog-card">
+      <div class="dialog-card__header">
+        <h2 id="mobile-more-title">{{ t("nav.more") }}</h2>
+        <button class="icon-button" type="button" data-dialog-close aria-label="{{ t('common.close') }}">×</button>
+      </div>
+      <nav aria-label="{{ t('nav.more_items') }}">
+        <a href="/notizen">{{ t("nav.notes") }}</a>
+        <a href="/kategorien">{{ t("nav.categories") }}</a>
+        <a href="/schlagwoerter">{{ t("nav.tags") }}</a>
+        <a href="/favoriten">{{ t("nav.favorites") }}</a>
+        <a href="/konto">{{ t("nav.account") }}</a>
+        <a href="/papierkorb">{{ t("nav.trash") }}</a>
+        {% if current_user.role == 'admin' %}<a href="/einstellungen">{{ t("nav.admin_settings") }}</a>{% endif %}
+      </nav>
+      <form method="post" action="/logout">
+        <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+        <button class="button button--secondary button--block" type="submit">{{ t("nav.logout") }}</button>
+      </form>
+    </div>
+  </dialog>
+  {% endif %}
+
+  <div class="toast-region" aria-live="polite" aria-atomic="true" data-toast-region></div>
+  <script id="app-i18n" type="application/json">{{ js_messages|tojson }}</script>
+  <script type="module" src="{{ asset('js/app.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

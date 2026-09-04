@@ -1,0 +1,224 @@
+name: rezeptverwaltung
+
+services:
+  proxy:
+    image: recipes-caddy:2.11.4-go1.27.1
+    build:
+      context: .
+      dockerfile: Dockerfile.caddy
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - "${PUBLIC_PORT:-8080}:8080"
+    environment:
+      PROXY_INTERNAL_PORT: "${PROXY_INTERNAL_PORT:-8080}"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - edge
+
+  app:
+    image: recipes-app:python3.12.14
+    build:
+      context: .
+      target: runtime
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment: &app_environment
+      POSTGRES_HOST: "db"
+      POSTGRES_PORT: "5432"
+      REDIS_URL: "${REDIS_URL:-redis://redis:6379/0}"
+      RENDERER_URL: "${RENDERER_URL:-http://renderer:8001}"
+      RENDERER_TOKEN: "${RENDERER_TOKEN:-development-renderer-token-change-me}"
+      STORAGE_ROOT: "${STORAGE_ROOT:-/data/storage}"
+      BACKUP_TEMP_ROOT: "${BACKUP_TEMP_ROOT:-/data/backup-temp}"
+      # Starlette spools multipart files above 1 MiB through tempfile. Backup
+      # uploads can be much larger than the app container's small /tmp tmpfs,
+      # so keep that transient copy on the disk-backed backup volume.
+      TMPDIR: "${BACKUP_TEMP_ROOT:-/data/backup-temp}"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    expose:
+      - "8000"
+    volumes:
+      - storage:/data/storage
+      - backup_temp:/data/backup-temp
+    networks:
+      - edge
+      - internal
+    read_only: true
+    tmpfs:
+      - /tmp:size=256m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    mem_limit: 1g
+    pids_limit: 256
+    cpus: 2.0
+
+  worker:
+    image: recipes-app:python3.12.14
+    pull_policy: never
+    restart: unless-stopped
+    command: ["dramatiq", "app.workers.tasks", "--processes", "1", "--threads", "4"]
+    env_file:
+      - path: .env
+        required: false
+    environment: *app_environment
+    depends_on:
+      app:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - storage:/data/storage
+      - backup_temp:/data/backup-temp
+    networks:
+      - internal
+      - renderer_net
+      - outbound
+    read_only: true
+    tmpfs:
+      - /tmp:size=1g,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    mem_limit: 2g
+    pids_limit: 512
+    cpus: 2.0
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "from redis import Redis; from sqlalchemy import text; from app.config import get_settings; from app.database import engine; settings = get_settings(); Redis.from_url(settings.redis_url, socket_timeout=2).ping(); connection = engine.connect(); connection.execute(text('SELECT 1')); connection.close()"
+      interval: 10s
+      timeout: 5s
+      start_period: 10s
+      retries: 5
+
+  renderer:
+    image: recipes-app:python3.12.14
+    pull_policy: never
+    restart: unless-stopped
+    command: ["uvicorn", "app.renderer:renderer_app", "--host", "0.0.0.0", "--port", "8001"]
+    environment:
+      RENDERER_TOKEN: "${RENDERER_TOKEN:-development-renderer-token-change-me}"
+      RENDERER_PROXY_URL: "http://egress:8888"
+    depends_on:
+      egress:
+        condition: service_healthy
+    expose:
+      - "8001"
+    networks:
+      - renderer_net
+    read_only: true
+    tmpfs:
+      - /tmp:size=1g,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    mem_limit: 1g
+    pids_limit: 256
+    cpus: 1.5
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://127.0.0.1:8001/health/live"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+
+  egress:
+    image: recipes-app:python3.12.14
+    pull_policy: never
+    restart: unless-stopped
+    command: ["python", "-m", "app.egress_proxy"]
+    expose:
+      - "8888"
+    networks:
+      - renderer_net
+      - outbound
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    mem_limit: 128m
+    pids_limit: 64
+    cpus: 0.5
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://127.0.0.1:8888/health/live"]
+      interval: 15s
+      timeout: 3s
+      retries: 10
+
+  db:
+    image: postgres:17.11-alpine3.24@sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: "${POSTGRES_DB:-recipe}"
+      POSTGRES_USER: "${POSTGRES_USER:-recipe}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-recipe}"
+    expose:
+      - "5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-recipe} -d ${POSTGRES_DB:-recipe}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks:
+      - internal
+    security_opt:
+      - no-new-privileges:true
+
+  redis:
+    image: redis:8.10.1-alpine3.23@sha256:becdda6c7f4b3fb42e42fd7f120bbf5c54c4caaaf16f26da24e4563d2c1f0576
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
+    expose:
+      - "6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks:
+      - internal
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  edge:
+  internal:
+    internal: true
+  renderer_net:
+    internal: true
+  outbound:
+
+volumes:
+  postgres_data:
+  redis_data:
+  storage:
+  backup_temp:
+  caddy_data:
+  caddy_config:

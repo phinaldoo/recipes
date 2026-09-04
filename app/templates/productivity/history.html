@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% set page_title = t('history.title') ~ ' · ' ~ recipe.title %}
+{% block page_id %}recipe-history{% endblock %}
+{% block content %}
+<nav class="breadcrumb" aria-label="{{ t('a11y.breadcrumb') }}">
+  <a href="/rezepte/{{ recipe.id }}">{{ recipe.title }}</a><span aria-hidden="true">/</span><span aria-current="page">{{ t('history.title') }}</span>
+</nav>
+<section class="page-heading">
+  <h1>{{ t('history.title') }}</h1>
+</section>
+<ol class="version-timeline" data-version-history data-recipe-id="{{ recipe.id }}" data-expected-updated-at="{{ recipe.updated_at.isoformat() }}">
+  {% for version, changes in history %}
+  <li>
+    <article class="version-card">
+      <header>
+        <div>
+          <span class="status-badge">{{ t('common.version') }} {{ version.version_number }}</span>
+          <h2>{{ version.change_summary or t('history.recipe_saved') }}</h2>
+          <p>{{ version.created_at|datetime }}{% if version.changed_by %} · {{ version.changed_by.visible_name }}{% endif %}</p>
+        </div>
+        {% if page > 1 or not loop.first %}<button class="button button--secondary" type="button" data-version-restore="{{ version.id }}">{{ t('history.restore') }}</button>{% endif %}
+      </header>
+      <details>
+        <summary>{{ t('history.show_changes', count=changes|length, label=tp('history.change.one', 'history.change.other', changes|length)) }}</summary>
+        {% if changes %}
+        <dl class="diff-list">{% for change in changes %}<div><dt>{{ change.field }}</dt><dd><span>{{ change.before }}</span><span aria-hidden="true">→</span><strong>{{ change.after }}</strong></dd></div>{% endfor %}</dl>
+        {% else %}<p class="muted">{{ t('history.first') }}</p>{% endif %}
+        <h3>{{ t('history.saved_content') }}</h3>
+        <dl class="snapshot-list">
+          <div><dt>{{ t('form.title') }}</dt><dd>{{ version.snapshot.title }}</dd></div>
+          <div><dt>{{ t('history.description') }}</dt><dd>{{ version.snapshot.description or '–' }}</dd></div>
+          <div><dt>{{ t('history.tags') }}</dt><dd>{{ version.snapshot.tags|default([])|join(', ') or '–' }}</dd></div>
+          <div><dt>{{ t('categories.title') }}</dt><dd>{% for category in version.snapshot.categories|default([]) %}{% if category.path is string %}{{ category.path }}{% else %}{{ category.path|join(' › ') }}{% endif %}{% if not loop.last %}, {% endif %}{% else %}–{% endfor %}</dd></div>
+        </dl>
+        <h4>{{ t('recipe.ingredients') }}</h4>
+        {% for group in version.snapshot.ingredient_groups|default([]) %}
+        {% if group.title %}<h5>{{ group.title }}</h5>{% endif %}
+        <ul class="ingredient-list">{% for item in group.ingredients %}<li><span class="ingredient-list__amount">{{ item.amount_min or '' }}{% if item.amount_max is not none %}–{{ item.amount_max }}{% endif %} {{ item.unit or '' }}</span><span class="ingredient-list__name">{{ item.name }}{% if item.note %} <small>({{ item.note }})</small>{% endif %}</span></li>{% else %}<li>{{ t('recipe.no_ingredients') }}</li>{% endfor %}</ul>
+        {% else %}<p class="muted">{{ t('history.no_ingredients') }}</p>{% endfor %}
+        <h4>{{ t('recipe.instructions') }}</h4>
+        <ol class="instruction-list">{% for step in version.snapshot.instruction_steps|default([]) %}<li><span>{{ step.text }}</span></li>{% else %}<li>{{ t('history.no_steps') }}</li>{% endfor %}</ol>
+      </details>
+    </article>
+  </li>
+  {% else %}<li class="empty-state"><h2>{{ t('history.empty') }}</h2></li>{% endfor %}
+</ol>
+{% if pages > 1 %}
+<nav class="pagination" aria-label="{{ t('history.pagination') }}">
+  {% if page > 1 %}<a class="button button--secondary" href="?page={{ page - 1 }}">{{ t('common.back') }}</a>{% endif %}
+  <span>{{ t('history.page', page=page, pages=pages, count=total) }}</span>
+  {% if page < pages %}<a class="button button--secondary" href="?page={{ page + 1 }}">{{ t('common.next') }}</a>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ asset('js/productivity.js') }}"></script>{% endblock %}

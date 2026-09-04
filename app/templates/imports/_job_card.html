@@ -1,0 +1,32 @@
+{% macro job_card(job, heading_level='h2') %}
+{% set source_name = job.source_url or (job.source_asset.original_filename if job.source_asset else t('import.source_file')) %}
+<article class="job-card" data-job-id="{{ job.id }}">
+  {% if job.source_asset and job.source_asset.mime_type.startswith('image/') %}
+  <a class="job-card__preview" href="/api/v1/imports/jobs/{{ job.id }}/source" target="_blank" rel="noopener" aria-label="{{ t('import.open_original_image') }}">
+    <img src="/api/v1/imports/jobs/{{ job.id }}/source" alt="{{ t('import.preview_of', name=job.source_asset.original_filename) }}">
+  </a>
+  {% else %}
+  <div class="job-card__icon" aria-hidden="true">{{ 'URL' if job.input_type == 'url' else ('JSON' if job.input_type == 'recipe_json' else job.input_type|upper) }}</div>
+  {% endif %}
+  <div class="job-card__body">
+    <div class="job-card__heading">
+      <{{ heading_level }}>{{ source_name }}</{{ heading_level }}>
+      <span class="status-badge" data-job-status>{{ ui_text(job.current_stage) }}</span>
+    </div>
+    <progress max="100" value="{{ job.progress }}" data-job-progress aria-label="{{ t('import.progress_for', name=source_name) }}">{{ job.progress }}%</progress>
+    <p class="job-card__error" data-job-error role="alert" {% if not job.error_message %}hidden{% endif %}>{{ ui_text(job.error_message, 'error.generic') if job.error_message else '' }}</p>
+    <div class="button-group job-card__actions" data-job-actions>
+      {% if job.source_asset %}
+      <a class="button button--text" href="/api/v1/imports/jobs/{{ job.id }}/source" target="_blank" rel="noopener">{{ t('import.open_original') }}</a>
+      {% endif %}
+      {% if job.status == 'queued' %}
+      <button class="button button--text" type="button" data-job-cancel>{{ t('common.cancel') }}</button>
+      {% elif job.status == 'failed' %}
+      <button class="button button--secondary" type="button" data-job-retry>{{ t('common.retry') }}</button>
+      {% elif job.result_recipe_id %}
+      <a class="button button--primary" href="/rezepte/{{ job.result_recipe_id }}">{{ t('import.open_recipe') }}</a>
+      {% endif %}
+    </div>
+  </div>
+</article>
+{% endmacro %}

@@ -1,0 +1,73 @@
+{% from "recipes/_kind.html" import recipe_kind_badge with context %}
+{% macro candidate_card(candidate) %}
+{% set payload = candidate.recipe_payload or {} %}
+<article class="candidate-card candidate-card--{{ candidate.status }}" data-candidate-id="{{ candidate.id }}">
+  <label class="candidate-card__select">
+    <input type="checkbox" value="{{ candidate.id }}" data-candidate-select {% if candidate.status == 'ready' %}checked{% else %}disabled{% endif %}>
+    <span class="sr-only">{{ t('import.candidate_select', title=candidate.title) }}</span>
+  </label>
+  {% if candidate.image_asset_id or candidate.image_region_json %}
+  <img class="candidate-card__image" src="/api/v1/imports/candidates/{{ candidate.id }}/image" alt="{{ t('import.candidate_image', title=candidate.title) }}">
+  {% else %}
+  <div class="candidate-card__image candidate-card__image--empty" aria-hidden="true">◇</div>
+  {% endif %}
+  <div class="candidate-card__content">
+    <div class="candidate-card__heading">
+      <div>
+        <p class="candidate-card__eyebrow">
+          {% if candidate.status == 'ready' %}
+            {{ t('import.candidate.ready') if candidate.confidence == 'high' else t('import.candidate.check') }}
+          {% elif candidate.status == 'failed' %}{{ t('import.candidate.failed') }}
+          {% elif candidate.status == 'imported' %}{{ t('import.candidate.imported') }}
+          {% else %}{{ t('import.candidate.skipped') }}{% endif %}
+        </p>
+        <h3>{{ candidate.title }}</h3>
+      </div>
+      {% if candidate.status == 'ready' %}<span class="status-badge">{{ t('common.selected') }}</span>{% endif %}
+    </div>
+    <p class="candidate-card__meta">
+      {{ recipe_kind_badge(payload.get('recipe_kind', 'cooking')) }} ·
+      {% if payload.get('base_servings') %}{{ payload.get('base_servings') }} {{ payload.get('serving_label', default_serving_label) }} · {% endif %}
+      {% for region in candidate.source_regions_json %}{{ t('import.page', number=region.page) }}{% if not loop.last %}, {% endif %}{% endfor %}
+    </p>
+    {% if payload.get('description') %}<p>{{ payload.get('description') }}</p>{% endif %}
+    {% if candidate.error_message %}<p class="candidate-card__error" role="alert">{{ ui_text(candidate.error_message, 'error.generic') }}</p>{% endif %}
+    {% if candidate.warnings_json %}
+    <ul class="candidate-card__warnings" aria-label="{{ t('import.detection_notes') }}">
+      {% for warning in candidate.warnings_json %}<li>{{ ui_text(warning, 'import.warning.generic') }}</li>{% endfor %}
+    </ul>
+    {% endif %}
+    {% if payload %}
+    <details class="candidate-card__details">
+      <summary>{{ t('import.review_full') }}</summary>
+      <div class="candidate-recipe-preview">
+        <section>
+          <h4>{{ t('recipe.ingredients') }}</h4>
+          {% for group in payload.get('ingredient_groups', []) %}
+            {% if group.get('title') %}<h5>{{ group.get('title') }}</h5>{% endif %}
+            <ul>
+              {% for ingredient in group.get('ingredients', []) %}
+              <li>
+                {% if ingredient.get('amount_min') is not none %}{{ ingredient.get('amount_min') }}{% endif %}
+                {% if ingredient.get('amount_max') is not none %}–{{ ingredient.get('amount_max') }}{% endif %}
+                {{ ingredient.get('unit') or '' }} {{ ingredient.get('name') }}
+                {% if ingredient.get('note') %} ({{ ingredient.get('note') }}){% endif %}
+              </li>
+              {% endfor %}
+            </ul>
+          {% else %}<p class="muted">{{ t('import.no_safe_ingredients') }}</p>{% endfor %}
+        </section>
+        <section>
+          <h4>{{ t('recipe.instructions') }}</h4>
+          <ol>
+            {% for step in payload.get('instruction_steps', []) %}<li>{{ step.get('text') }}</li>
+            {% else %}<li class="muted">{{ t('import.no_safe_steps') }}</li>{% endfor %}
+          </ol>
+        </section>
+      </div>
+    </details>
+    {% endif %}
+    {% if candidate.result_recipe_id %}<a class="button button--primary" href="/rezepte/{{ candidate.result_recipe_id }}">{{ t('import.open_recipe') }}</a>{% endif %}
+  </div>
+</article>
+{% endmacro %}

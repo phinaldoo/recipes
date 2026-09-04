@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% set page_title = t('import.running_title') ~ ' · ' ~ t('recipes.title') %}
+{% block page_id %}running-imports{% endblock %}
+{% block content %}
+<nav class="breadcrumb" aria-label="{{ t('a11y.breadcrumb') }}">
+  <a href="/importieren">{{ t('nav.import') }}</a><span aria-hidden="true">/</span><span aria-current="page">{{ t('import.running_short') }}</span>
+</nav>
+<section class="page-heading">
+  <h1>{{ t('import.running_title') }}</h1>
+</section>
+{% if batches %}
+<section class="job-history" aria-label="{{ t('import.running_jobs') }}">
+  {% for batch in batches %}
+  <article class="history-card">
+    <div class="job-card__heading">
+      <div>
+        <span class="status-badge">{% if batch.status == 'queued' %}{{ t('import.status.queued') }}{% elif batch.status == 'review' %}{{ t('import.status.review') }}{% else %}{{ t('import.status.processing') }}{% endif %}</span>
+        <h2>{{ batch.total_jobs }} {{ tp('common.file.one', 'common.file.other', batch.total_jobs) }}</h2>
+        <time datetime="{{ batch.created_at.isoformat() }}">{{ t('import.started', date=batch.created_at|datetime) }}</time>
+      </div>
+      <a class="button button--secondary" href="/importieren/{{ batch.id }}">{% if batch.status == 'review' %}{{ t('import.choose_recipes') }}{% else %}{{ t('import.show_progress') }}{% endif %}</a>
+    </div>
+    <p class="muted">{{ batch.completed_jobs }} {{ t('common.done') }}{% if batch.failed_jobs %} · {{ batch.failed_jobs }} {{ t('common.failed') }}{% endif %}</p>
+  </article>
+  {% endfor %}
+</section>
+{% else %}
+<section class="empty-state">
+  <div class="empty-state__mark" aria-hidden="true">✓</div>
+  <h2>{{ t('import.no_running_title') }}</h2>
+  <p>{{ t('import.no_running_text') }}</p>
+  <a class="button button--primary" href="/importieren">{{ t('import.title') }}</a>
+</section>
+{% endif %}
+{% endblock %}

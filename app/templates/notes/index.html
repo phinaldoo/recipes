@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% set page_title = t('notes.title') ~ ' · ' ~ t('recipes.title') %}
+{% set page_description = t('notes.description') %}
+{% block page_id %}notes{% endblock %}
+{% block content %}
+<section class="page-heading notes-heading">
+  <h1>{{ t('notes.title') }}</h1>
+</section>
+
+<div class="notes-layout">
+  <section class="productivity-card note-editor" aria-labelledby="note-form-title">
+    <header class="productivity-card__header">
+      <div>
+        <h2 id="note-form-title" data-note-form-title>{{ t('notes.new') }}</h2>
+        <p>{{ t('notes.optional_help') }}</p>
+      </div>
+      <span class="note-private-badge"><span aria-hidden="true">●</span> {{ t('notes.private') }}</span>
+    </header>
+
+    <form class="note-form" data-note-form>
+      <label class="field">
+        <span>{{ t('form.title') }}</span>
+        <input name="title" maxlength="200" placeholder="{{ t('notes.title_placeholder') }}" autocomplete="off">
+      </label>
+      <label class="field">
+        <span>{{ t('notes.url') }}</span>
+        <input name="url" type="url" maxlength="2048" placeholder="https://…" autocomplete="url" inputmode="url" aria-describedby="note-url-help">
+        <small class="field-help" id="note-url-help">{{ t('notes.url_help') }}</small>
+      </label>
+      <label class="field">
+        <span>{{ t('notes.untitled') }}</span>
+        <textarea name="content" maxlength="10000" rows="7" placeholder="{{ t('notes.content_placeholder') }}"></textarea>
+      </label>
+      <p class="alert alert--error" data-note-error role="alert" hidden></p>
+      <div class="note-form__actions">
+        <button class="button button--primary" type="submit" data-note-submit>{{ t('notes.save') }}</button>
+        <button class="button button--text" type="button" data-note-cancel hidden>{{ t('notes.cancel_edit') }}</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="notes-collection" aria-labelledby="saved-notes-title">
+    <header class="notes-collection__header">
+      <div>
+        <h2 id="saved-notes-title">{{ t('notes.saved') }}</h2>
+        <p>{{ t('notes.order') }}</p>
+      </div>
+      <span class="management-count" data-note-count>{{ notes|length }} {{ tp('notes.one', 'notes.other', notes|length) }}</span>
+    </header>
+
+    <ul class="note-list" data-note-list aria-label="{{ t('notes.list') }}">
+      {% for note in notes %}
+      <li class="note-card" data-note-id="{{ note.id }}" data-note-payload='{{ {"title": note.title, "url": note.url, "content": note.content}|tojson }}'>
+        <div class="note-card__main">
+          {% if note.url %}
+          <a class="note-card__title" href="{{ note.url }}" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer">
+            {{ note.title or note.url }} <span aria-hidden="true">↗</span>
+          </a>
+          {% else %}
+          <h3 class="note-card__title">{{ note.title or t('notes.untitled') }}</h3>
+          {% endif %}
+          {% if note.content %}<p class="note-card__content">{{ note.content }}</p>{% endif %}
+          {% if note.url and note.title %}<p class="note-card__url">{{ note.url }}</p>{% endif %}
+          <p class="note-card__meta">{{ t('notes.edited', date=note.updated_at|datetime) }}</p>
+        </div>
+        <div class="note-card__actions">
+          <button class="button button--text" type="button" data-note-edit>{{ t('common.edit') }}</button>
+          <button class="button button--text danger-link" type="button" data-note-delete>{{ t('common.delete') }}</button>
+        </div>
+      </li>
+      {% else %}
+      <li class="notes-empty" data-notes-empty>
+        <span class="notes-empty__mark" aria-hidden="true">＋</span>
+        <span>
+          <strong>{{ t('notes.empty_title') }}</strong>
+          <small>{{ t('notes.empty_text') }}</small>
+        </span>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ asset('js/notes.js') }}"></script>{% endblock %}

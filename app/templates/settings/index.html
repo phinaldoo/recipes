@@ -1,0 +1,44 @@
+{% extends "base.html" %}{% set page_title = t('settings.title') ~ ' · ' ~ t('recipes.title') %}{% block page_id %}settings{% endblock %}
+{% block content %}<section class="page-heading"><h1>{{ t('settings.title') }}</h1></section>
+<section class="settings-section" aria-labelledby="system-title"><div class="section-heading"><h2 id="system-title">{{ t('settings.system') }}</h2><button class="button button--secondary button--small" type="button" data-refresh-summary>{{ t('common.refresh') }}</button></div><dl class="system-summary" data-system-summary><div><dt>{{ t('settings.application') }}</dt><dd>{{ t('common.version') }} <span data-application-version>{{ app_version }}</span></dd></div><div><dt>{{ t('settings.database') }}</dt><dd data-database-schema>–</dd></div><div><dt>{{ t('settings.users') }}</dt><dd data-count-users>–</dd></div><div><dt>{{ t('recipes.title') }}</dt><dd data-count-recipes>–</dd></div><div><dt>{{ t('settings.comments') }}</dt><dd data-count-comments>–</dd></div><div><dt>{{ t('categories.title') }}</dt><dd data-count-categories>–</dd></div><div><dt>{{ t('settings.files') }}</dt><dd data-count-files>–</dd></div><div><dt>{{ t('settings.storage') }}</dt><dd data-storage-total>–</dd></div></dl></section>
+<section class="settings-section" aria-labelledby="backup-title"><div class="section-heading"><div><h2 id="backup-title">{{ t('settings.backup_title') }}</h2><p>{{ t('settings.backup_text') }}</p></div><button class="button button--primary" type="button" data-create-backup>{{ t('settings.create_backup') }}</button></div><div class="job-history" data-backup-jobs>{% for job in jobs %}<article class="history-card" data-maintenance-job="{{ job.id }}" data-operation="{{ job.operation }}" data-status="{{ job.status }}"><div><span class="status-badge">{{ ui_text(job.current_stage) }}</span><h3>{{ t('settings.backup') if job.operation == 'export' else t('settings.restore') }}</h3><time datetime="{{ job.created_at.isoformat() }}">{{ job.created_at|datetime_de }}</time></div><progress max="100" value="{{ job.progress }}" aria-label="{{ t('settings.progress', operation=t('settings.backup') if job.operation == 'export' else t('settings.restore')) }}">{{ job.progress }}%</progress>{% if job.error_message %}<p class="alert alert--error">{{ ui_text(job.error_message, 'error.generic') }}</p>{% endif %}{% if job.operation == 'export' and job.status == 'completed' %}<a class="button button--secondary button--small" href="/api/v1/settings/backups/{{ job.id }}/download">{{ t('common.download') }}</a>{% endif %}</article>{% else %}<p class="empty-inline">{{ t('settings.no_jobs') }}</p>{% endfor %}</div></section>
+<section class="settings-section danger-zone" aria-labelledby="restore-title">
+  <div class="danger-zone__heading"><div><h2 id="restore-title">{{ t('settings.restore_title') }}</h2></div></div>
+  <p>{{ t('settings.restore_text') }}</p>
+  <div class="restore-guide" aria-labelledby="restore-guide-title">
+    <h3 id="restore-guide-title">{{ t('settings.restore_guide_title') }}</h3>
+    <ol>
+      <li><span aria-hidden="true">1</span><div><strong>{{ t('settings.restore_step_select') }}</strong><p>{{ t('settings.restore_step_select_detail') }}</p></div></li>
+      <li><span aria-hidden="true">2</span><div><strong>{{ t('settings.restore_step_check') }}</strong><p>{{ t('settings.restore_step_check_detail') }}</p></div></li>
+      <li><span aria-hidden="true">3</span><div><strong>{{ t('settings.restore_step_review') }}</strong><p>{{ t('settings.restore_step_review_detail') }}</p></div></li>
+      <li><span aria-hidden="true">4</span><div><strong>{{ t('settings.restore_step_confirm') }}</strong><p>{{ t('settings.restore_step_confirm_detail') }}</p></div></li>
+    </ol>
+  </div>
+  <p class="restore-session-note" role="note">{{ t('settings.restore_session_note') }}</p>
+  <form class="restore-upload" data-restore-upload>
+    <label class="upload-zone upload-zone--compact" for="restore-file" data-restore-drop-zone>
+      <span class="upload-zone__icon" aria-hidden="true">⇧</span>
+      <strong>{{ t('settings.choose_backup') }}</strong>
+      <span>{{ t('settings.valid_zip') }}</span>
+      <input id="restore-file" name="file" type="file" accept="application/zip,.zip" required aria-describedby="restore-file-help">
+    </label>
+    <p id="restore-file-help" class="restore-file-help">{{ t('settings.restore_file_help') }}</p>
+    <div class="restore-file" data-restore-file-summary hidden>
+      <span class="restore-file__icon" aria-hidden="true">ZIP</span>
+      <span><strong data-restore-file-name></strong><small data-restore-file-size></small></span>
+      <button class="button button--text button--small" type="button" data-restore-file-clear>{{ t('common.remove') }}</button>
+    </div>
+    <div class="restore-upload-status" data-restore-upload-status role="status" aria-live="polite" hidden>
+      <div class="restore-upload-status__heading"><strong data-restore-status-title></strong><span data-restore-status-percent></span></div>
+      <progress max="100" value="0" data-restore-upload-progress aria-label="{{ t('settings.upload_progress_label') }}">0%</progress>
+      <p data-restore-status-detail></p>
+    </div>
+    <div class="restore-upload__actions">
+      <button class="button button--secondary" type="submit" data-restore-upload-submit disabled>{{ t('settings.preflight_start') }}</button>
+      <button class="button button--text" type="button" data-restore-upload-cancel hidden>{{ t('settings.cancel_upload') }}</button>
+    </div>
+  </form>
+  <div class="restore-preflight" data-restore-preflight hidden></div>
+</section>
+<dialog data-restore-dialog aria-labelledby="restore-confirm-title"><form class="dialog-card" data-restore-confirm><h2 id="restore-confirm-title">{{ t('settings.restore_confirm') }}</h2><p>{{ t('settings.restore_prompt', word=t('settings.confirmation_word')) }}</p><p class="alert alert--warning" role="note">{{ t('settings.restore_confirm_warning') }}</p><input type="hidden" name="preflight_token"><div class="field"><label for="restore-password">{{ t('settings.password') }}</label><input id="restore-password" name="password" type="password" autocomplete="current-password" required></div><div class="field"><label for="restore-word">{{ t('settings.confirmation') }}</label><input id="restore-word" name="confirmation" type="text" pattern="{{ t('settings.confirmation_word') }}" autocomplete="off" required></div><div class="dialog-actions"><button class="button button--secondary" type="button" data-dialog-close>{{ t('common.cancel') }}</button><button class="button button--danger" type="submit" data-restore-confirm-submit disabled>{{ t('settings.replace') }}</button></div></form></dialog>
+{% endblock %}{% block scripts %}<script type="module" src="{{ asset('js/settings-backup-restore.js') }}"></script>{% endblock %}

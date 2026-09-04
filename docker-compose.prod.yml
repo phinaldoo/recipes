@@ -1,0 +1,6 @@
+services:
+  proxy:
+    environment:
+      APP_DOMAIN: "${APP_DOMAIN:?APP_DOMAIN must be set}"
+    volumes:
+      - ./Caddyfile.production:/etc/caddy/Caddyfile:ro

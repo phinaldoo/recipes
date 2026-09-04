@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% from "recipes/_kind.html" import recipe_kind_icon with context %}
+{% set selected_recipe_kind = selected_recipe_kind|default(none) %}
+{% set page_title = t('favorites.title') ~ ' · ' ~ t('recipes.title') %}
+{% block page_id %}favorites{% endblock %}
+{% block content %}
+<section class="page-heading page-heading--with-action"><div><h1>{{ t('favorites.title') }}</h1></div><a class="button button--secondary" href="/rezepte">{{ t('favorites.all') }}</a></section>
+<nav class="recipe-kind-switch recipe-kind-switch--links" aria-label="{{ t('recipes.kind_filter') }}">
+  {% for kind in ['all', 'cooking', 'baking'] %}
+  <a class="recipe-kind-option recipe-kind-option--{{ kind }}" href="/favoriten{% if kind != 'all' %}?recipe_kind={{ kind }}{% endif %}" {% if (kind == 'all' and not selected_recipe_kind) or kind == selected_recipe_kind %}aria-current="page"{% endif %}>
+    <span>{{ recipe_kind_icon(kind) }}<span>{{ t('recipes.kind.' ~ kind) }}</span></span>
+  </a>
+  {% endfor %}
+</nav>
+{% if recipes %}<section class="recipe-grid" aria-label="{{ t('favorites.list') }}">
+{% include "recipes/_cards.html" %}
+</section>{% elif selected_recipe_kind %}<section class="empty-state"><div class="empty-state__mark" aria-hidden="true">☆</div><h2>{{ t('favorites.empty_kind_title', kind=t('recipes.kind.' ~ selected_recipe_kind)) }}</h2><p>{{ t('favorites.empty_kind_text') }}</p><a class="button button--secondary" href="/favoriten">{{ t('favorites.show_all') }}</a></section>{% else %}<section class="empty-state"><div class="empty-state__mark" aria-hidden="true">☆</div><h2>{{ t('favorites.empty_title') }}</h2><p>{{ t('favorites.empty_text') }}</p><a class="button button--primary" href="/rezepte">{{ t('recipes.discover') }}</a></section>{% endif %}
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ asset('js/productivity.js') }}"></script>{% endblock %}

@@ -1,0 +1,61 @@
+{% macro energy_cell(value) -%}
+<td>
+  {% if value and (value.energy_kj is not none or value.energy_kcal is not none) %}
+    {% if value.energy_kj is not none %}{{ value.energy_kj|format_decimal }} kJ{% endif %}{% if value.energy_kj is not none and value.energy_kcal is not none %}<span aria-hidden="true"> / </span>{% endif %}{% if value.energy_kcal is not none %}{{ value.energy_kcal|format_decimal }} kcal{% endif %}
+  {% else %}<span aria-label="{{ t('common.no_data') }}">–</span>{% endif %}
+</td>
+{%- endmacro %}
+
+{% macro gram_cell(value, field) -%}
+<td>{% if value and (value|attr(field)) is not none %}{{ (value|attr(field))|format_decimal }} g{% else %}<span aria-label="{{ t('common.no_data') }}">–</span>{% endif %}</td>
+{%- endmacro %}
+
+{% macro gram_row(label, field, per_serving, per_100g_ml) -%}
+{% if (per_serving and (per_serving|attr(field)) is not none) or (per_100g_ml and (per_100g_ml|attr(field)) is not none) %}
+<tr><th scope="row">{{ label }}</th>{% if per_serving %}{{ gram_cell(per_serving, field) }}{% endif %}{% if per_100g_ml %}{{ gram_cell(per_100g_ml, field) }}{% endif %}</tr>
+{% endif %}
+{%- endmacro %}
+
+{% macro nutrition_table(recipe, show_disclaimer=true) -%}
+{% set per_serving = recipe.nutrition_per_serving %}
+{% set per_100g_ml = recipe.nutrition_per_100g_ml %}
+{% if per_serving or per_100g_ml %}
+<div class="nutrition-table-wrap">
+  <table class="nutrition-table" aria-label="{{ t('recipe.nutrition') }}">
+    <thead><tr><th scope="col">{{ t("nutrition.label") }}</th>{% if per_serving %}<th scope="col">{{ t("nutrition.per_serving") }}</th>{% endif %}{% if per_100g_ml %}<th scope="col">{{ t("nutrition.per_100") }}</th>{% endif %}</tr></thead>
+    <tbody>
+      {% if (per_serving and (per_serving.energy_kj is not none or per_serving.energy_kcal is not none)) or (per_100g_ml and (per_100g_ml.energy_kj is not none or per_100g_ml.energy_kcal is not none)) %}<tr><th scope="row">{{ t("nutrition.energy") }}</th>{% if per_serving %}{{ energy_cell(per_serving) }}{% endif %}{% if per_100g_ml %}{{ energy_cell(per_100g_ml) }}{% endif %}</tr>{% endif %}
+      {{ gram_row(t("nutrition.fat"), "fat_g", per_serving, per_100g_ml) }}
+      {{ gram_row(t("nutrition.saturated"), "saturated_fat_g", per_serving, per_100g_ml) }}
+      {{ gram_row(t("nutrition.carbohydrates"), "carbohydrates_g", per_serving, per_100g_ml) }}
+      {{ gram_row(t("nutrition.sugars"), "sugars_g", per_serving, per_100g_ml) }}
+      {{ gram_row(t("nutrition.fiber"), "fiber_g", per_serving, per_100g_ml) }}
+      {{ gram_row(t("nutrition.protein"), "protein_g", per_serving, per_100g_ml) }}
+      {{ gram_row(t("nutrition.salt"), "salt_g", per_serving, per_100g_ml) }}
+    </tbody>
+  </table>
+  {% if per_serving and per_serving.note or per_100g_ml and per_100g_ml.note %}<div class="nutrition-notes">{% if per_serving and per_serving.note %}<p><strong>{{ t("nutrition.per_serving") }}:</strong> {{ per_serving.note }}</p>{% endif %}{% if per_100g_ml and per_100g_ml.note %}<p><strong>{{ t("nutrition.per_100") }}:</strong> {{ per_100g_ml.note }}</p>{% endif %}</div>{% endif %}
+  {% if show_disclaimer %}<p class="nutrition-disclaimer">{{ t("nutrition.disclaimer") }}</p>{% endif %}
+</div>
+{% endif %}
+{%- endmacro %}
+
+{% macro nutrition_editor(value, basis, label, prefix) -%}
+<details class="nutrition-editor" data-nutrition-row data-basis="{{ basis }}" {% if value %}open{% endif %}>
+  <summary><span>{{ label }}</span><small>{{ t("common.optional") }}</small></summary>
+  <div class="nutrition-editor__body">
+    <div class="nutrition-editor__grid">
+      <div class="field"><label for="{{ prefix }}-energy-kj">{{ t("nutrition.energy") }} (kJ)</label><input id="{{ prefix }}-energy-kj" data-nutrition-field="energy_kj" type="text" inputmode="decimal" value="{{ value.energy_kj|format_decimal if value and value.energy_kj is not none else '' }}"></div>
+      <div class="field"><label for="{{ prefix }}-energy-kcal">{{ t("nutrition.energy") }} (kcal)</label><input id="{{ prefix }}-energy-kcal" data-nutrition-field="energy_kcal" type="text" inputmode="decimal" value="{{ value.energy_kcal|format_decimal if value and value.energy_kcal is not none else '' }}"></div>
+      <div class="field"><label for="{{ prefix }}-fat">{{ t("nutrition.fat") }} (g)</label><input id="{{ prefix }}-fat" data-nutrition-field="fat_g" type="text" inputmode="decimal" value="{{ value.fat_g|format_decimal if value and value.fat_g is not none else '' }}"></div>
+      <div class="field"><label for="{{ prefix }}-saturated-fat">{{ t("nutrition.saturated") }} (g)</label><input id="{{ prefix }}-saturated-fat" data-nutrition-field="saturated_fat_g" type="text" inputmode="decimal" value="{{ value.saturated_fat_g|format_decimal if value and value.saturated_fat_g is not none else '' }}"></div>
+      <div class="field"><label for="{{ prefix }}-carbohydrates">{{ t("nutrition.carbohydrates") }} (g)</label><input id="{{ prefix }}-carbohydrates" data-nutrition-field="carbohydrates_g" type="text" inputmode="decimal" value="{{ value.carbohydrates_g|format_decimal if value and value.carbohydrates_g is not none else '' }}"></div>
+      <div class="field"><label for="{{ prefix }}-sugars">{{ t("nutrition.sugars") }} (g)</label><input id="{{ prefix }}-sugars" data-nutrition-field="sugars_g" type="text" inputmode="decimal" value="{{ value.sugars_g|format_decimal if value and value.sugars_g is not none else '' }}"></div>
+      <div class="field"><label for="{{ prefix }}-fiber">{{ t("nutrition.fiber") }} (g)</label><input id="{{ prefix }}-fiber" data-nutrition-field="fiber_g" type="text" inputmode="decimal" value="{{ value.fiber_g|format_decimal if value and value.fiber_g is not none else '' }}"></div>
+      <div class="field"><label for="{{ prefix }}-protein">{{ t("nutrition.protein") }} (g)</label><input id="{{ prefix }}-protein" data-nutrition-field="protein_g" type="text" inputmode="decimal" value="{{ value.protein_g|format_decimal if value and value.protein_g is not none else '' }}"></div>
+      <div class="field"><label for="{{ prefix }}-salt">{{ t("nutrition.salt") }} (g)</label><input id="{{ prefix }}-salt" data-nutrition-field="salt_g" type="text" inputmode="decimal" value="{{ value.salt_g|format_decimal if value and value.salt_g is not none else '' }}"></div>
+      <div class="field field--full"><label for="{{ prefix }}-note">{{ t("nutrition.basis_note") }}</label><input id="{{ prefix }}-note" data-nutrition-note type="text" maxlength="1000" value="{{ value.note if value and value.note else '' }}" placeholder="{{ t('nutrition.basis_placeholder') }}"></div>
+    </div>
+  </div>
+</details>
+{%- endmacro %}

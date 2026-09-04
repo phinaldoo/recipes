@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% set page_title = t('tags.title') ~ ' · ' ~ t('recipes.title') %}
+{% block page_id %}tags{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <h1>{{ t('tags.title') }}</h1>
+</section>
+
+<div class="productivity-layout productivity-layout--two">
+  <section class="productivity-card" aria-labelledby="tags-title">
+    <header class="productivity-card__header">
+      <div>
+        <h2 id="tags-title">{{ t('tags.tags') }}</h2>
+        <p>{{ t('tags.tags_text') }}</p>
+      </div>
+      <span class="management-count">{{ tags|length }} {{ tp('tags.one', 'tags.other', tags|length) }}</span>
+    </header>
+
+    <form class="management-form inline-product-form" data-tag-form aria-label="{{ t('tags.create_label') }}">
+      <label class="field">
+        <span>{{ t('tags.new') }}</span>
+        <input name="name" maxlength="100" required placeholder="{{ t('tags.placeholder') }}">
+      </label>
+      <button class="button button--primary" type="submit">{{ t('tags.create') }}</button>
+    </form>
+
+    <ul class="management-list" aria-label="{{ t('tags.existing') }}">
+      {% for tag, count in tags %}
+      <li data-tag-id="{{ tag.id }}">
+        <span class="management-list__copy">
+          <strong>{{ tag.name }}</strong>
+          <small>{{ count }} {{ tp('recipe.one', 'recipe.other', count) }}</small>
+        </span>
+        <div class="button-group">
+          <button class="button button--text" type="button" data-tag-rename>{{ t('common.rename') }}</button>
+          <button class="button button--text danger-link" type="button" data-tag-delete {% if count %}disabled title="{{ t('tags.in_use') }}"{% endif %}>{{ t('common.delete') }}</button>
+        </div>
+      </li>
+      {% else %}
+      <li class="empty-inline management-empty">
+        <span class="management-empty__mark" aria-hidden="true">#</span>
+        <span>
+          <strong>{{ t('tags.empty_title') }}</strong>
+          <small>{{ t('tags.empty_text') }}</small>
+        </span>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="productivity-card" aria-labelledby="synonyms-title">
+    <header class="productivity-card__header">
+      <div>
+        <h2 id="synonyms-title">{{ t('synonyms.title') }}</h2>
+        <p>{{ t('synonyms.text') }}</p>
+      </div>
+      <span class="management-count">{{ synonyms|length }} {{ tp('synonyms.one', 'synonyms.other', synonyms|length) }}</span>
+    </header>
+
+    <form class="management-form synonym-form" data-synonym-form aria-label="{{ t('synonyms.connect_label') }}">
+      <label class="field">
+        <span>{{ t('synonyms.term') }}</span>
+        <input name="term" maxlength="100" required placeholder="{{ t('synonyms.term_placeholder') }}">
+      </label>
+      <span class="synonym-form__connector" aria-hidden="true">↔</span>
+      <label class="field">
+        <span>{{ t('synonyms.synonym') }}</span>
+        <input name="synonym" maxlength="100" required placeholder="{{ t('synonyms.synonym_placeholder') }}">
+      </label>
+      <button class="button button--primary" type="submit">{{ t('synonyms.connect') }}</button>
+    </form>
+
+    <ul class="management-list" aria-label="{{ t('synonyms.existing') }}">
+      {% for synonym in synonyms %}
+      <li data-synonym-id="{{ synonym.id }}">
+        <span class="synonym-pair">
+          <strong>{{ synonym.term }}</strong>
+          <span aria-hidden="true">↔</span>
+          <strong>{{ synonym.synonym }}</strong>
+        </span>
+        <button class="button button--text danger-link" type="button" data-synonym-delete>{{ t('common.delete') }}</button>
+      </li>
+      {% else %}
+      <li class="empty-inline management-empty">
+        <span class="management-empty__mark" aria-hidden="true">↔</span>
+        <span>
+          <strong>{{ t('synonyms.empty_title') }}</strong>
+          <small>{{ t('synonyms.empty_text') }}</small>
+        </span>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ asset('js/productivity.js') }}"></script>{% endblock %}

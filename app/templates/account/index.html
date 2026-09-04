@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% set page_title = t("account.title") ~ " · " ~ t("app.name") %}
+{% block page_id %}account{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <h1>{{ t("account.title") }}</h1>
+</section>
+{% if request.query_params.get('saved') == '1' %}
+<div class="alert alert--success" role="status">{{ t("account.saved") }}</div>
+{% endif %}
+<section class="settings-section" aria-labelledby="account-language-title">
+  <form method="post" action="/konto" class="stack account-settings-form">
+    <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+    <div class="field">
+      <label id="account-language-title" for="account-language">{{ t("account.language") }}</label>
+      <select id="account-language" name="language" required>
+        {% for item in supported_locales %}
+        <option value="{{ item.code }}" {% if item.code == locale %}selected{% endif %}>{{ item.native_name }}</option>
+        {% endfor %}
+      </select>
+      <p class="field-help">{{ t("account.language_help") }}</p>
+    </div>
+    <button class="button button--primary" type="submit">{{ t("account.save") }}</button>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,96 @@
+vulnerabilities:
+  - id: CVE-2026-14456
+    purls:
+      - "pkg:apk/alpine/libcrypto3"
+      - "pkg:apk/alpine/libssl3"
+    expired_at: 2026-12-03
+    statement: PostgreSQL does not create an OpenSSL QUIC listener; the affected code is not invoked.
+  - id: CVE-2025-68121
+    paths: &gosu_path
+      - "usr/local/bin/gosu"
+    expired_at: &review_date 2026-12-03
+    statement: &gosu_statement The finding is confined to the startup-only gosu helper; none of the affected standard-library APIs are reachable from its user-switch and exec path.
+  - id: CVE-2025-61726
+    paths: *gosu_path
+    expired_at: *review_date
+    statement: *gosu_statement
+  - id: CVE-2025-61729
+    paths: *gosu_path
+    expired_at: *review_date
+    statement: *gosu_statement
+  - id: CVE-2026-25679
+    paths: *gosu_path
+    expired_at: *review_date
+    statement: *gosu_statement
+  - id: CVE-2026-27145
+    paths: *gosu_path
+    expired_at: *review_date
+    statement: *gosu_statement
+  - id: CVE-2026-32280
+    paths: *gosu_path
+    expired_at: *review_date
+    statement: *gosu_statement
+  - id: CVE-2026-32281
+    paths: *gosu_path
+    expired_at: *review_date
+    statement: *gosu_statement
+  - id: CVE-2026-32283
+    paths: *gosu_path
+    expired_at: *review_date
+    statement: *gosu_statement
+  - id: CVE-2026-33811
+    paths: *gosu_path
+    expired_at: *review_date
+    statement: *gosu_statement
+  - id: CVE-2026-33814
+    paths: *gosu_path
+    expired_at: *review_date
+    statement: *gosu_statement
+  - id: CVE-2026-33818
+    paths: *gosu_path
+    expired_at: *review_date
+    statement: *gosu_statement
+  - id: CVE-2026-39820
+    paths: *gosu_path
+    expired_at: *review_date
+    statement: *gosu_statement
+  - id: CVE-2026-39821
+    paths: *gosu_path
+    expired_at: *review_date
+    statement: *gosu_statement
+  - id: CVE-2026-39822
+    paths: *gosu_path
+    expired_at: *review_date
+    statement: *gosu_statement
+  - id: CVE-2026-39836
+    paths: *gosu_path
+    expired_at: *review_date
+    statement: *gosu_statement
+  - id: CVE-2026-42499
+    paths: *gosu_path
+    expired_at: *review_date
+    statement: *gosu_statement
+  - id: CVE-2026-42504
+    paths: *gosu_path
+    expired_at: *review_date
+    statement: *gosu_statement
+  - id: CVE-2026-56853
+    paths: *gosu_path
+    expired_at: *review_date
+    statement: *gosu_statement
+  - id: CVE-2026-56858
+    paths: *gosu_path
+    expired_at: *review_date
+    statement: *gosu_statement
+  - id: CVE-2026-56859
+    paths: *gosu_path
+    expired_at: *review_date
+    statement: *gosu_statement
+  - id: CVE-2026-56860
+    paths: *gosu_path
+    expired_at: *review_date
+    statement: *gosu_statement
+  - id: CVE-2026-56862
+    paths: *gosu_path
+    expired_at: *review_date
+    statement: *gosu_statement

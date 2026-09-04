@@ -1,0 +1,74 @@
+{% from "recipes/_skeletons.html" import recipe_skeleton_grid with context %}
+<div id="recipe-results-region" data-recipe-results-region aria-busy="false">
+  <p class="sr-only" role="status" aria-live="polite" aria-atomic="true" data-recipe-results-summary>{{ total }} {{ tp('recipes.found.one', 'recipes.found.other', total) }}</p>
+  {% if selected_category_ids %}
+  <div class="active-filters" aria-label="{{ t('recipes.active_filters') }}">
+    {% for category in categories if category.id|string in selected_category_ids %}
+    <a class="chip chip--active" href="?q={{ q|urlencode }}&sort={{ sort }}{% if selected_recipe_kind %}&recipe_kind={{ selected_recipe_kind }}{% endif %}{% for id in selected_category_ids if id != category.id|string %}&category_ids={{ id }}{% endfor %}" data-recipe-search-link aria-label="{{ t('recipes.remove_filter', name=category.path) }}">
+      {{ category.path }} <span aria-hidden="true">×</span>
+    </a>
+    {% endfor %}
+    <a class="text-link" href="/rezepte{% if q or selected_recipe_kind %}?{% if q %}q={{ q|urlencode }}{% endif %}{% if q and selected_recipe_kind %}&{% endif %}{% if selected_recipe_kind %}recipe_kind={{ selected_recipe_kind }}{% endif %}{% endif %}" data-recipe-search-link>{{ t('recipes.reset_all') }}</a>
+  </div>
+  {% endif %}
+
+  <div data-recipe-search-skeleton hidden>
+    {{ recipe_skeleton_grid(6) }}
+  </div>
+
+  <div data-recipe-results>
+  {% if recipes %}
+  <div
+    class="recipe-stream"
+    data-recipe-stream
+    data-page="{{ page }}"
+    data-pages="{{ pages }}"
+    data-total="{{ total }}"
+    data-loaded="{{ recipes|length }}"
+    {% if page < pages %}data-next-url="?q={{ q|urlencode }}&sort={{ sort }}&page={{ page + 1 }}{% if selected_recipe_kind %}&recipe_kind={{ selected_recipe_kind }}{% endif %}{% for id in selected_category_ids %}&category_ids={{ id }}{% endfor %}"{% endif %}
+  >
+    <section class="recipe-grid" aria-label="{{ t('recipes.list_label') }}" data-recipe-grid>
+      {% include "recipes/_cards.html" %}
+    </section>
+
+    <div class="recipe-stream__skeletons" data-recipe-stream-skeletons hidden>
+      {{ recipe_skeleton_grid(3) }}
+    </div>
+
+    <div class="recipe-stream__error alert alert--error" data-recipe-stream-error hidden>
+      <p>{{ t('recipes.load_error') }}</p>
+      <button class="button button--secondary button--small" type="button" data-recipe-stream-retry>{{ t('common.retry') }}</button>
+    </div>
+
+    <a
+      class="button button--secondary recipe-stream__more"
+      href="?q={{ q|urlencode }}&sort={{ sort }}&page={{ page + 1 }}{% if selected_recipe_kind %}&recipe_kind={{ selected_recipe_kind }}{% endif %}{% for id in selected_category_ids %}&category_ids={{ id }}{% endfor %}"
+      data-recipe-stream-more
+      {% if page >= pages %}hidden{% endif %}
+    >{{ t('recipes.load_more') }}</a>
+    <span class="recipe-stream__sentinel" data-recipe-stream-sentinel aria-hidden="true" {% if page >= pages %}hidden{% endif %}></span>
+    <p class="recipe-stream__end muted" data-recipe-stream-end hidden>{{ t('recipes.all_loaded', total=total) }}</p>
+    <p class="sr-only" aria-live="polite" aria-atomic="true" data-recipe-stream-status></p>
+  </div>
+  {% elif q or selected_category_ids or selected_recipe_kind %}
+  <section class="empty-state">
+    <div class="empty-state__mark" aria-hidden="true">⌕</div>
+    <h2>{{ t('recipes.empty_search_title') }}</h2>
+    <p>{{ t('recipes.empty_search_text') }}</p>
+    <a class="button button--secondary" href="{{ '/papierkorb' if trash_mode|default(false) else '/rezepte' }}" data-recipe-search-link>{{ t('recipes.empty_search_reset') }}</a>
+  </section>
+  {% elif trash_mode|default(false) %}
+  <section class="empty-state"><div class="empty-state__mark" aria-hidden="true">✓</div><h2>{{ t('recipes.empty_trash_title') }}</h2><p>{{ t('recipes.empty_trash_text') }}</p><a class="button button--secondary" href="/rezepte">{{ t('recipes.back') }}</a></section>
+  {% else %}
+  <section class="empty-state">
+    <div class="empty-state__mark" aria-hidden="true">R</div>
+    <h2>{{ t('recipes.empty_title') }}</h2>
+    <p>{{ t('recipes.empty_text') }}</p>
+    <div class="button-group">
+      <a class="button button--primary" href="/rezepte/neu">{{ t('recipes.create') }}</a>
+      <a class="button button--secondary" href="/importieren">{{ t('recipes.import') }}</a>
+    </div>
+  </section>
+  {% endif %}
+  </div>
+</div>

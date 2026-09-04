@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% from "recipes/_nutrition.html" import nutrition_table with context %}
+{% from "recipes/_kind.html" import recipe_kind_badge with context %}
+{% set page_title = recipe.title ~ " · " ~ t('recipes.title') %}
+{% set page_description = recipe.description or (recipe.title ~ " – " ~ t('recipe.private_description')) %}
+{% if recipe.cover_image %}{% set og_image = app_base_url ~ '/api/v1/assets/' ~ recipe.cover_image.media_asset_id ~ '/view' %}{% endif %}
+{% block page_id %}recipe-detail{% endblock %}
+{% block content %}
+<article class="recipe-detail" data-recipe-id="{{ recipe.id }}" data-base-servings="{{ recipe.base_servings }}" data-serving-label="{{ recipe.serving_label }}" data-image-generation data-job-id="{{ image_generation_job.id if image_generation_job else '' }}" data-generation-available="{{ 'true' if image_generation_available else 'false' }}" data-generation-mode="{{ image_generation_job.generation_mode if image_generation_job else ('regenerate' if recipe.images else 'create') }}">
+  <nav class="breadcrumb" aria-label="{{ t('a11y.breadcrumb') }}"><a href="/rezepte">{{ t('recipes.title') }}</a><span aria-hidden="true">/</span><span aria-current="page">{{ recipe.title }}</span></nav>
+  <header class="recipe-hero">
+    <div class="recipe-hero__copy">
+      <div class="chip-row">{{ recipe_kind_badge(recipe.recipe_kind|default('cooking')) }}{% for category in recipe.expanded_categories %}<span class="chip">{{ category.name }}</span>{% endfor %}{% for tag in recipe.tags %}<span class="chip">#{{ tag.name }}</span>{% endfor %}</div>
+      <h1>{{ recipe.title }}</h1>
+      {% if recipe.description %}<p class="recipe-hero__description">{{ recipe.description }}</p>{% endif %}
+      <div class="button-group">
+        <a class="button button--primary" href="/rezepte/{{ recipe.id }}/bearbeiten">{{ t('recipe.edit') }}</a>
+        <button class="button button--secondary" type="button" data-favorite-button data-recipe-id="{{ recipe.id }}" aria-pressed="false">☆ {{ t('recipe.favorite_add_short') }}</button>
+        <details class="action-menu" data-dropdown>
+          <summary class="button button--secondary">{{ t('recipe.more_actions') }}</summary>
+          <div class="action-menu__panel">
+            {% if image_generation_available or image_generation_job %}
+            <button type="button" data-generate-recipe-image {% if image_generation_job %}disabled aria-busy="true"{% else %}aria-busy="false"{% endif %}>
+              <span class="button__spinner" data-generation-spinner {% if not image_generation_job %}hidden{% endif %} aria-hidden="true"></span>
+              <span data-generation-label>{{ t('recipe.image.generating') if image_generation_job else (t('recipe.image.regenerate') if recipe.images else t('recipe.image.create')) }}</span>
+            </button>
+            {% endif %}
+            <a data-json-export href="/api/v1/recipes/{{ recipe.id }}/export/json">{{ t('recipe.export_json') }}</a>
+            <a data-pdf-export href="/api/v1/recipes/{{ recipe.id }}/export/pdf?servings={{ recipe.base_servings }}">{{ t('recipe.download_pdf') }}</a>
+            <a data-pdf-comments href="/api/v1/recipes/{{ recipe.id }}/export/pdf?servings={{ recipe.base_servings }}&include_comments=true">{{ t('recipe.pdf_notes') }}</a>
+            <a data-print-link href="/rezepte/{{ recipe.id }}/print?servings={{ recipe.base_servings }}" target="_blank" rel="noopener">{{ t('recipe.print') }}</a>
+            <a data-print-comments href="/rezepte/{{ recipe.id }}/print?servings={{ recipe.base_servings }}&include_comments=true" target="_blank" rel="noopener">{{ t('recipe.print_notes') }}</a>
+            <a href="/rezepte/{{ recipe.id }}/teilen">{{ t('recipe.share') }}</a>
+            <a href="/rezepte/{{ recipe.id }}/verlauf">{{ t('recipe.history') }}</a>
+            <button class="danger-link" type="button" data-delete-recipe>{{ t('common.delete') }}</button>
+          </div>
+        </details>
+      </div>
+    </div>
+    <div class="recipe-gallery" aria-label="{{ t('recipe.gallery') }}">
+      {% if recipe.images %}
+      <figure class="recipe-gallery__main">
+        <img src="/api/v1/assets/{{ recipe.cover_image.media_asset_id }}/view" alt="{{ recipe.cover_image.alt_text or recipe.title }}" width="960" height="720">
+        <span class="recipe-gallery__generated" data-gallery-generated {% if not recipe.cover_image.generation_metadata %}hidden{% endif %}>{{ t('recipe.image.generated') }}</span>
+        <figcaption {% if not recipe.cover_image.caption %}hidden{% endif %}>{{ recipe.cover_image.caption or '' }}</figcaption>
+      </figure>
+      {% if recipe.images|length > 1 %}
+      <div class="recipe-gallery__thumbs">
+        {% for image in recipe.images if image.id != recipe.cover_image.id %}
+        <button type="button" aria-label="{{ t('recipe.image.show', name=image.alt_text or recipe.title) }}" data-gallery-image data-src="/api/v1/assets/{{ image.media_asset_id }}/view" data-alt="{{ image.alt_text or recipe.title }}" data-caption="{{ image.caption or '' }}" data-generated="{{ 'true' if image.generation_metadata else 'false' }}">
+          <img src="/api/v1/assets/{{ image.thumbnail_asset_id or image.media_asset_id }}/view" alt="" width="160" height="120" loading="lazy">
+        </button>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% else %}
+      <div class="recipe-gallery__empty">
+        <span aria-hidden="true">R</span>
+        <p>{{ t('recipe.no_image') }}</p>
+      </div>
+      {% endif %}
+    </div>
+  </header>
+
+  <dl class="recipe-facts">
+    <div><dt>{{ t('recipe.prep') }}</dt><dd>{{ recipe.prep_time_minutes|duration }}</dd></div>
+    <div><dt>{{ t('recipe.cook') }}</dt><dd>{{ recipe.cook_time_minutes|duration }}</dd></div>
+    <div><dt>{{ t('recipe.rest') }}</dt><dd>{{ recipe.rest_time_minutes|duration }}</dd></div>
+    <div><dt>{{ t('recipe.total') }}</dt><dd>{{ recipe.total_time_minutes|duration }}</dd></div>
+  </dl>
+
+  <div class="recipe-content-grid">
+    <section class="ingredients-panel" aria-labelledby="ingredients-title">
+      <div class="section-heading section-heading--servings">
+        <h2 id="ingredients-title">{{ t('recipe.ingredients') }}</h2>
+        <div class="servings-control" data-servings-control>
+          <div class="servings-stepper" role="group" aria-label="{{ t('servings.adjust', label=recipe.serving_label) }}">
+            <button class="servings-stepper__button" type="button" data-servings-minus aria-label="{{ t('servings.decrease') }}"><span aria-hidden="true">−</span></button>
+            <label class="servings-stepper__value">
+              <span class="sr-only">{{ t('servings.desired', label=recipe.serving_label) }}</span>
+              <input type="number" min="0.25" max="100000" step="0.25" value="{{ recipe.base_servings }}" inputmode="decimal" aria-describedby="servings-note" data-servings-input>
+              <span class="servings-stepper__unit" title="{{ recipe.serving_label }}" aria-hidden="true">{{ recipe.serving_label }}</span>
+            </label>
+            <button class="servings-stepper__button" type="button" data-servings-plus aria-label="{{ t('servings.increase') }}"><span aria-hidden="true">+</span></button>
+          </div>
+        </div>
+      </div>
+      <p class="servings-note" id="servings-note" data-servings-note aria-live="polite">{{ t('servings.base', amount=recipe.base_servings|format_amount, label=recipe.serving_label) }}</p>
+      <div data-ingredient-groups>
+      {% for group in recipe.ingredient_groups %}
+      <section class="ingredient-group" {% if group.title %}aria-labelledby="group-{{ group.id }}"{% endif %}>
+        {% if group.title %}<h3 id="group-{{ group.id }}">{{ group.title }}</h3>{% endif %}
+        <ul class="ingredient-list">
+          {% for item in group.ingredients %}
+          <li data-ingredient data-amount-min="{{ item.amount_min if item.amount_min is not none else '' }}" data-amount-max="{{ item.amount_max if item.amount_max is not none else '' }}" data-scalable="{{ 'true' if item.is_scalable else 'false' }}">
+            <span class="ingredient-list__amount"><span data-scaled-min>{{ item.amount_min|format_amount }}</span>{% if item.amount_max is not none %}<span aria-hidden="true">–</span><span data-scaled-max>{{ item.amount_max|format_amount }}</span>{% endif %} {{ item.unit or '' }}</span>
+            <span class="ingredient-list__name">{{ item.name }}{% if item.note %} <small>({{ item.note }})</small>{% endif %}</span>
+          </li>
+          {% endfor %}
+        </ul>
+      </section>
+      {% else %}<p class="muted">{{ t('recipe.no_ingredients_full') }}</p>{% endfor %}
+      </div>
+    </section>
+
+    <section class="instructions-panel" aria-labelledby="instructions-title">
+      <div class="section-heading"><h2 id="instructions-title">{{ t('recipe.instructions') }}</h2></div>
+      {% if recipe.instruction_steps %}
+      <ol class="instruction-list">
+        {% for step in recipe.instruction_steps %}<li><span>{{ step.text }}</span></li>{% endfor %}
+      </ol>
+      {% else %}<p class="muted">{{ t('recipe.no_steps_full') }}</p>{% endif %}
+    </section>
+  </div>
+
+  {% if recipe.nutrition %}
+  <section class="nutrition-section" aria-labelledby="nutrition-title">
+    <div class="section-heading"><h2 id="nutrition-title">{{ t('recipe.nutrition') }}</h2></div>
+    {{ nutrition_table(recipe) }}
+  </section>
+  {% endif %}
+
+  {% if recipe.notes or recipe.source or recipe.original_assets %}
+  <div class="supplement-grid">
+    {% if recipe.notes %}<section><h2>{{ t('common.notes') }}</h2><div class="prose pre-wrap">{{ recipe.notes }}</div></section>{% endif %}
+    {% if recipe.source %}<section><h2>{{ t('common.source') }}</h2><p>{% if recipe.source.url %}<a class="external-link" href="{{ recipe.source.url }}" target="_blank" rel="noopener noreferrer">{{ recipe.source.title or recipe.source.url }} <span class="sr-only">({{ t('recipe.opens_external') }})</span>↗</a>{% else %}{{ recipe.source.title }}{% endif %}</p></section>{% endif %}
+    {% if recipe.original_assets %}<section><h2>{{ t('recipe.original_files') }}</h2><ul class="file-list">{% for link in recipe.original_assets %}<li><span>{{ link.asset.original_filename }}</span><a class="button button--secondary button--small" href="/api/v1/assets/{{ link.media_asset_id }}/download">{{ t('common.download') }}</a></li>{% endfor %}</ul></section>{% endif %}
+  </div>
+  {% endif %}
+
+  <section class="comments-section" aria-labelledby="comments-title">
+    <div class="section-heading"><h2 id="comments-title">{{ t('comments.title') }}</h2></div>
+    <form class="comment-form" data-comment-form>
+      <label for="comment-text">{{ t('comments.add') }}</label>
+      <textarea id="comment-text" name="text" rows="3" maxlength="10000" placeholder="{{ t('comments.placeholder') }}" required></textarea>
+      <div class="form-row form-row--end"><span class="field-help">{{ t('comments.max') }}</span><button class="button button--primary" type="submit">{{ t('comments.add') }}</button></div>
+    </form>
+    <div class="comment-list" data-comment-list>
+      {% for comment in recipe.comments if comment.deleted_at is none %}
+      <article class="comment" data-comment-id="{{ comment.id }}">
+        <header><div class="avatar" aria-hidden="true">{{ comment.author_name_snapshot[:1]|upper }}</div><div><h3>{{ comment.author_name_snapshot }}</h3><time datetime="{{ comment.created_at.isoformat() }}">{{ comment.created_at|datetime_de }}</time>{% if comment.updated_at > comment.created_at %}<span> · {{ t('comments.edited') }}</span>{% endif %}</div></header>
+        <p class="pre-wrap" data-comment-text>{{ comment.text }}</p>
+        {% if comment.author_user_id == current_user.id or current_user.role == 'admin' %}
+        <div class="comment__actions">{% if comment.author_user_id == current_user.id %}<button class="button button--text" type="button" data-comment-edit>{{ t('common.edit') }}</button>{% endif %}<button class="button button--text danger-link" type="button" data-comment-delete>{{ t('common.delete') }}</button></div>
+        {% endif %}
+      </article>
+      {% else %}<div class="empty-inline" data-comments-empty>{{ t('comments.empty') }}</div>{% endfor %}
+    </div>
+  </section>
+
+  <footer class="recipe-audit">
+    <p>{{ t('audit.created', date=recipe.created_at|datetime_de) }}{% if recipe.created_by_name_snapshot or recipe.created_by %} {{ t('audit.by', name=recipe.created_by_name_snapshot or recipe.created_by.visible_name) }}{% endif %}</p>
+    <p>{{ t('audit.updated', date=recipe.updated_at|datetime_de) }}{% if recipe.updated_by_name_snapshot or recipe.updated_by %} {{ t('audit.by', name=recipe.updated_by_name_snapshot or recipe.updated_by.visible_name) }}{% endif %}</p>
+  </footer>
+</article>
+
+<dialog data-delete-dialog aria-labelledby="delete-title">
+  <form method="dialog" class="dialog-card" data-delete-form>
+    <h2 id="delete-title">{{ t('recipe.delete_title') }}</h2>
+    <p>{{ t('recipe.delete_text', title=recipe.title) }}</p>
+    <div class="dialog-actions"><button class="button button--secondary" value="cancel">{{ t('common.cancel') }}</button><button class="button button--danger" value="confirm">{{ t('recipe.delete_confirm') }}</button></div>
+  </form>
+</dialog>
+{% endblock %}
+{% block scripts %}
+<script type="module" src="{{ asset('js/serving-calculator.js') }}"></script>
+<script type="module" src="{{ asset('js/recipe-comments.js') }}"></script>
+<script type="module" src="{{ asset('js/productivity.js') }}"></script>
+<script type="module" src="{{ asset('js/recipe-image-generation.js') }}"></script>
+{% endblock %}

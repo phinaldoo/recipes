@@ -1,0 +1,17 @@
+{% macro recipe_skeleton_grid(count=3) -%}
+<section class="recipe-grid recipe-grid--skeleton" aria-hidden="true">
+  {% for _ in range(count) %}
+  <article class="recipe-card recipe-card--skeleton">
+    <div class="recipe-skeleton recipe-skeleton--image"></div>
+    <div class="recipe-card__body">
+      <div class="recipe-card__meta">
+        <span class="recipe-skeleton recipe-skeleton--chip"></span>
+        <span class="recipe-skeleton recipe-skeleton--chip recipe-skeleton--chip-short"></span>
+      </div>
+      <span class="recipe-skeleton recipe-skeleton--title"></span>
+      <span class="recipe-skeleton recipe-skeleton--fact"></span>
+    </div>
+  </article>
+  {% endfor %}
+</section>
+{%- endmacro %}

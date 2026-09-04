@@ -1,0 +1,31 @@
+{% from "recipes/_nutrition.html" import nutrition_table with context %}
+{% from "recipes/_kind.html" import recipe_kind_badge with context %}
+<!doctype html>
+<html lang="{{ locale }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="referrer" content="no-referrer">
+  <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+  <title>{{ recipe.title }} · {{ t("share.shared_recipe") }}</title>
+</head>
+<body class="public-recipe-page">
+  <main class="public-recipe">
+    <header class="public-recipe__header">
+      <h1>{{ recipe.title }}</h1>
+      {% if recipe.description %}<p>{{ recipe.description }}</p>{% endif %}
+      <div class="chip-row">{{ recipe_kind_badge(recipe.recipe_kind|default('cooking')) }}{% for category in recipe.expanded_categories %}<span class="chip">{{ category.name }}</span>{% endfor %}{% for tag in recipe.tags %}<span class="chip">#{{ tag.name }}</span>{% endfor %}</div>
+    </header>
+    {% if recipe.cover_image %}<figure class="public-recipe__image"><img src="/freigabe/{{ token }}/bild/{{ recipe.cover_image.id }}" alt="{{ recipe.cover_image.alt_text or recipe.title }}">{% if recipe.cover_image.caption %}<figcaption>{{ recipe.cover_image.caption }}</figcaption>{% endif %}</figure>{% endif %}
+    <dl class="recipe-facts"><div><dt>{{ t("recipe.prep") }}</dt><dd>{{ recipe.prep_time_minutes|duration }}</dd></div><div><dt>{{ t("recipe.cook") }}</dt><dd>{{ recipe.cook_time_minutes|duration }}</dd></div><div><dt>{{ t("recipe.rest") }}</dt><dd>{{ recipe.rest_time_minutes|duration }}</dd></div><div><dt>{{ t("recipe.total") }}</dt><dd>{{ recipe.total_time_minutes|duration }}</dd></div></dl>
+    <div class="recipe-content-grid">
+      <section class="ingredients-panel"><h2>{{ t("recipe.ingredients_for", amount=recipe.base_servings|format_amount, label=recipe.serving_label) }}</h2>{% for group in recipe.ingredient_groups %}{% if group.title %}<h3>{{ group.title }}</h3>{% endif %}<ul class="ingredient-list">{% for item in group.ingredients %}<li><span class="ingredient-list__amount">{{ item.amount_min|format_amount }}{% if item.amount_max is not none %}–{{ item.amount_max|format_amount }}{% endif %} {{ item.unit or '' }}</span><span class="ingredient-list__name">{{ item.name }}{% if item.note %} <small>({{ item.note }})</small>{% endif %}</span></li>{% endfor %}</ul>{% endfor %}</section>
+      <section class="instructions-panel"><h2>{{ t("recipe.instructions") }}</h2><ol class="instruction-list">{% for step in recipe.instruction_steps %}<li><span>{{ step.text }}</span></li>{% endfor %}</ol></section>
+    </div>
+    {% if recipe.nutrition %}<section class="nutrition-section productivity-card"><h2>{{ t("recipe.nutrition") }}</h2>{{ nutrition_table(recipe) }}</section>{% endif %}
+    {% if recipe.notes %}<section class="productivity-card"><h2>{{ t("common.notes") }}</h2><div class="pre-wrap">{{ recipe.notes }}</div></section>{% endif %}
+    {% if recipe.source %}<footer class="public-recipe__source"><strong>{{ t("common.source") }}:</strong> {% if recipe.source.url %}<a href="{{ recipe.source.url }}" target="_blank" rel="noopener noreferrer">{{ recipe.source.title or recipe.source.url }}</a>{% else %}{{ recipe.source.title }}{% endif %}</footer>{% endif %}
+  </main>
+</body>
+</html>

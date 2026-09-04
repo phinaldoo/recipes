@@ -1,0 +1,33 @@
+{% from "recipes/_favorite_toggle.html" import favorite_toggle with context %}
+{% from "recipes/_kind.html" import recipe_kind_badge with context %}
+{% for recipe in recipes %}
+{% set card_recipe_kind = recipe.recipe_kind|default('cooking') %}
+<article class="recipe-card" data-recipe-card data-recipe-id="{{ recipe.id }}" data-recipe-kind="{{ card_recipe_kind }}">
+  {% if trash_mode|default(false) %}<div class="recipe-card__image" aria-hidden="true">{% else %}<a class="recipe-card__image" href="/rezepte/{{ recipe.id }}" tabindex="-1" aria-hidden="true">{% endif %}
+    {% if recipe.cover_image %}
+    <img src="/api/v1/assets/{{ recipe.cover_image.thumbnail_asset_id or recipe.cover_image.media_asset_id }}/view" alt="" loading="lazy" width="640" height="480">
+    {% else %}
+    <span class="image-placeholder"><span aria-hidden="true">R</span><span>{{ t('recipes.no_image') }}</span></span>
+    {% endif %}
+  {% if trash_mode|default(false) %}</div>{% else %}</a>{% endif %}
+  {% if not trash_mode|default(false) %}
+  {% set is_favorite = recipe.id in favorite_recipe_ids %}
+  {{ favorite_toggle(recipe, is_favorite) }}
+  {% endif %}
+  {{ recipe_kind_badge(card_recipe_kind, 'recipe-card__kind') }}
+  <div class="recipe-card__body">
+    <div class="recipe-card__meta">
+      {% set card_categories = recipe.categories|default([]) %}
+      {% for category in card_categories[:2] %}<span class="chip">{{ category.name }}</span>{% endfor %}
+      {% if card_categories|length > 2 %}<span class="chip">+{{ card_categories|length - 2 }}</span>{% endif %}
+    </div>
+    <h2>{% if trash_mode|default(false) %}{{ recipe.title }}{% else %}<a href="/rezepte/{{ recipe.id }}">{{ recipe.title }}</a>{% endif %}</h2>
+    <div class="recipe-card__facts">
+      {% if recipe.total_time_minutes %}<span>{{ recipe.total_time_minutes|duration }}</span>{% endif %}
+      {% set comment_count = recipe.comments|default([])|selectattr('deleted_at', 'none')|list|length %}
+      {% if comment_count %}<span>{{ comment_count }} {{ tp('recipes.note.one', 'recipes.note.other', comment_count) }}</span>{% endif %}
+    </div>
+    {% if trash_mode|default(false) %}<button class="button button--secondary button--small" type="button" data-restore-recipe="{{ recipe.id }}">{{ t('recipes.restore') }}</button>{% endif %}
+  </div>
+</article>
+{% endfor %}

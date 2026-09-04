@@ -1,0 +1,16 @@
+{% macro recipe_kind_icon(kind) -%}
+{% if kind == 'all' %}
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="4" width="6" height="6" rx="1"></rect><rect x="4" y="14" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect></svg>
+{% elif kind == 'baking' %}
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><rect x="3.5" y="4" width="17" height="16" rx="2"></rect><path d="M3.5 8.5h17"></path><circle cx="7" cy="6.25" r=".65" fill="currentColor" stroke="none"></circle><circle cx="10" cy="6.25" r=".65" fill="currentColor" stroke="none"></circle><path d="M7 16.5c1.1-2.75 2.75-4.25 5-4.25s3.9 1.5 5 4.25H7Z"></path></svg>
+{% else %}
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><path d="M5 10h14v3.5a6.5 6.5 0 0 1-6.5 6.5h-1A6.5 6.5 0 0 1 5 13.5V10Z"></path><path d="M3 10h18M9 7.25c-1.35-1.15-1.35-2.35 0-3.6M15 7.25c1.35-1.15 1.35-2.35 0-3.6"></path></svg>
+{% endif %}
+{%- endmacro %}
+
+{% macro recipe_kind_badge(kind, class_name='') -%}
+<span class="recipe-kind-label recipe-kind-label--{{ kind }}{% if class_name %} {{ class_name }}{% endif %}">
+  {{ recipe_kind_icon(kind) }}
+  <span>{{ t('recipes.kind.' ~ kind) }}</span>
+</span>
+{%- endmacro %}
