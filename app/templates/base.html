@@ -20,8 +20,7 @@
   <meta name="twitter:image" content="{{ og_image|default(app_base_url ~ asset('pwa/og.png')) }}">
   <meta name="pwa-enabled" content="{{ 'true' if pwa_enabled|default(false) else 'false' }}">
   {% if pwa_enabled|default(false) %}<link rel="manifest" href="{{ pwa_manifest_url }}">{% endif %}
-  <link rel="apple-touch-icon" href="{{ asset('pwa/apple-touch-icon.png') }}">
-  <link rel="icon" href="{{ asset('pwa/icon.svg') }}" type="image/svg+xml">
+  {% include "_icons.html" %}
   <link rel="stylesheet" href="{{ asset('css/app.css') }}">
   <title>{{ page_title|default(t('app.name')) }}</title>
   {% block head %}{% endblock %}
@@ -31,7 +30,7 @@
   <header class="site-header">
     <div class="site-header__inner">
       <a class="brand" href="/rezepte" aria-label="{{ t('nav.recipes') }}">
-        <span class="brand__mark" aria-hidden="true">R</span>
+        <img class="brand__mark" src="{{ asset('pwa/icon-192.png') }}" alt="" width="192" height="192">
         <span>{{ t("app.name") }}</span>
       </a>
       {% if current_user %}

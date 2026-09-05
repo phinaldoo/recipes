@@ -9,14 +9,14 @@
   <meta name="apple-mobile-web-app-title" content="{{ t('app.name') }}">
   <meta name="robots" content="noindex,nofollow">
   {% if pwa_enabled %}<link rel="manifest" href="{{ pwa_manifest_url }}">{% endif %}
-  <link rel="apple-touch-icon" href="{{ asset('pwa/apple-touch-icon.png') }}">
+  {% include "_icons.html" %}
   <link rel="stylesheet" href="{{ asset('css/app.css') }}">
   <title>{{ t("login.title") }} · {{ t("app.name") }}</title>
 </head>
 <body class="login-page">
   <main class="login-shell">
     <section class="login-card" aria-labelledby="login-title">
-      <div class="brand brand--large"><span class="brand__mark" aria-hidden="true">R</span><span>{{ t("app.name") }}</span></div>
+      <div class="brand brand--large"><img class="brand__mark" src="{{ asset('pwa/icon-192.png') }}" alt="" width="192" height="192"><span>{{ t("app.name") }}</span></div>
       <div class="login-card__intro">
         <h1 id="login-title">{{ t("login.welcome") }}</h1>
         <p>{{ t("login.intro") }}</p>
