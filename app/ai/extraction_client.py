@@ -27,6 +27,7 @@ from app.ai.recipe_localization import normalize_recipe_units
 from app.config import Settings, get_settings
 from app.i18n import DEFAULT_LOCALE, Locale
 from app.schemas.ai import (
+    DetectedRecipe,
     DetectedRecipeDocument,
     ExtractedRecipe,
     ExtractedRecipeDraft,
@@ -334,16 +335,25 @@ def extract_recipe(
     images: list[bytes] | None = None,
     existing_category_paths: list[str],
     title_hint: str | None = None,
+    target_recipe: DetectedRecipe | None = None,
     target_language: Locale = DEFAULT_LOCALE,
     settings: Settings | None = None,
 ) -> ExtractedRecipe:
     settings = _configured_settings(settings)
+    target: dict[str, Any] | None = (
+        target_recipe.model_dump(mode="json", exclude={"recipe_image_candidates", "warnings"})
+        if target_recipe
+        else {"title_hint": title_hint}
+        if title_hint
+        else None
+    )
     input_content: list[dict[str, Any]] = [
-        {"type": "input_text", "text": extraction_prompt(existing_category_paths)}
+        {
+            "type": "input_text",
+            "text": extraction_prompt(existing_category_paths, target_recipe=target),
+        }
     ]
-    if images:
-        input_content.extend(_image_input(image) for image in images)
-    elif content is not None and mime_type == "application/pdf":
+    if content is not None and mime_type == "application/pdf":
         input_content.append(
             {
                 "type": "input_file",
@@ -353,8 +363,10 @@ def extract_recipe(
         )
     elif content is not None and mime_type is not None:
         input_content.append(_image_input(content, mime_type))
-    else:
+    elif not images:
         raise ValueError("Für die Extraktion fehlt das Quellmaterial")
+    if images:
+        input_content.extend(_image_input(image) for image in images)
     draft = _request_structured(
         model_type=ExtractedRecipeDraft,
         schema_name="extracted_recipe",

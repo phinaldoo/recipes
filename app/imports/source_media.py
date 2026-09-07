@@ -70,10 +70,15 @@ def crop_source_region(
     region: RecipeSourceRegion,
     *,
     max_dimension: int = 3500,
+    rotation_clockwise: int = 0,
 ) -> bytes:
     page = _render_page(content, mime_type, region.page)
     try:
         cropped = page.crop(_pixel_box(region.bounding_box, *page.size))
+        if rotation_clockwise not in {0, 90, 180, 270}:
+            raise SourceRegionError("Ungültige Bilddrehung")
+        if rotation_clockwise:
+            cropped = cropped.rotate(-rotation_clockwise, expand=True)
         if cropped.width < 8 or cropped.height < 8:
             raise SourceRegionError("Ein erkannter Quellausschnitt ist zu klein")
         if max(cropped.size) > max_dimension:

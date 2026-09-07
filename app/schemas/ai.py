@@ -54,12 +54,14 @@ class RecipeSourceRegion(BaseModel):
 class RecipeImageCandidate(BaseModel):
     page: int = Field(ge=1)
     bounding_box: NormalizedBoundingBox = Field(default_factory=_full_page_box)
+    rotation_clockwise: Literal[0, 90, 180, 270] = 0
     description: str = Field(max_length=1000)
     confidence: float = Field(ge=0, le=1)
 
 
 class DetectedRecipe(BaseModel):
     title_hint: str = Field(min_length=1, max_length=300)
+    identifying_description: str = Field(default="", max_length=1000)
     source_regions: list[RecipeSourceRegion] = Field(min_length=1, max_length=20)
     recipe_image_candidates: list[RecipeImageCandidate] = Field(default_factory=list, max_length=10)
     warnings: list[str] = Field(default_factory=list, max_length=50)
@@ -67,7 +69,7 @@ class DetectedRecipe(BaseModel):
 
 
 class DetectedRecipeDocument(BaseModel):
-    recipes: list[DetectedRecipe] = Field(min_length=1, max_length=20)
+    recipes: list[DetectedRecipe] = Field(max_length=20)
     warnings: list[str] = Field(default_factory=list, max_length=100)
 
 
@@ -97,6 +99,7 @@ class _ExtractedRecipeContent(BaseModel):
     recipe_image_candidates: list[RecipeImageCandidate] = Field(default_factory=list, max_length=20)
     warnings: list[str] = Field(default_factory=list, max_length=100)
     extraction_confidence: Literal["high", "medium", "low"] = "medium"
+    is_complete: bool = True
 
 
 class ExtractedRecipeDraft(_ExtractedRecipeContent):

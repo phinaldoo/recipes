@@ -89,7 +89,12 @@ def _image_reference(
             if candidate
             else RecipeSourceRegion(page=page)
         )
-        return crop_source_region(reference, reference_mime, region), "image/png"
+        return crop_source_region(
+            reference,
+            reference_mime,
+            region,
+            rotation_clockwise=candidate.rotation_clockwise if candidate else 0,
+        ), "image/png"
     except AIImageError:
         raise
     except (SourceRegionError, ValueError) as exc:

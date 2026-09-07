@@ -49,6 +49,8 @@ AI_EXTRACTION_MODEL=your-extraction-model
 
 Apply changes with `make restart`. Review the import drafts and confirm which recipes to save. Website imports run through an isolated browser and egress proxy.
 
+Each recipe extraction receives the full image or PDF, identified by its title, location and distinguishing description. Detected regions are hints, not text crops, so other columns and continuation pages remain available. Incomplete, low-confidence or empty recipe drafts require review. Only cover images are cropped and rotated, then checked for recipe relevance and clean framing without recipe text.
+
 For image generation, also set `AI_IMAGE_GENERATION_ENABLED=true` and choose `AI_IMAGE_MODEL`. API keys stay on the server. AI processing sends source content or recipe data to your configured provider.
 
 ## Running your instance

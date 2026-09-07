@@ -338,7 +338,13 @@ def view_candidate_image(
             page=image_candidate.page,
             bounding_box=image_candidate.bounding_box,
         )
-        image = crop_source_region(source_content, source_mime, region, max_dimension=1200)
+        image = crop_source_region(
+            source_content,
+            source_mime,
+            region,
+            max_dimension=1200,
+            rotation_clockwise=image_candidate.rotation_clockwise,
+        )
     except (OSError, SourceRegionError, ValidationError) as exc:
         raise HTTPException(
             status_code=404,

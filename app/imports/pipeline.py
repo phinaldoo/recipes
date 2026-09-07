@@ -416,7 +416,13 @@ def _verified_image_options(
             bounding_box=image_candidate.bounding_box,
         )
         try:
-            crop = crop_source_region(content, mime_type, region, max_dimension=2400)
+            crop = crop_source_region(
+                content,
+                mime_type,
+                region,
+                max_dimension=2400,
+                rotation_clockwise=image_candidate.rotation_clockwise,
+            )
             match = verify_recipe_image(
                 extracted=extracted,
                 image=crop,
@@ -585,6 +591,7 @@ def _image_metadata(option: VerifiedImageOption) -> dict[str, object]:
         "origin": "verified_import_crop",
         "page": image_candidate.page,
         "bounding_box": image_candidate.bounding_box.model_dump(mode="json"),
+        "rotation_clockwise": image_candidate.rotation_clockwise,
         "detection_confidence": image_candidate.confidence,
         "verification_confidence": option.verification_confidence,
         "verification_reason": option.verification_reason,
@@ -879,12 +886,10 @@ def _process_import_job(job_id: uuid.UUID) -> None:
                             total=len(candidates),
                         ),
                     )
-                    region_images = [
-                        crop_source_region(detection_content, detection_mime, region)
-                        for region in detected.source_regions
-                    ]
                     extracted = extract_recipe(
-                        images=region_images,
+                        content=detection_content,
+                        mime_type=detection_mime,
+                        target_recipe=detected,
                         existing_category_paths=category_paths,
                         title_hint=detected.title_hint,
                         target_language=target_language,
@@ -1133,7 +1138,14 @@ def _process_import_job(job_id: uuid.UUID) -> None:
                     job.error_message = (
                         "Die erkannten Rezepte konnten nicht zuverlässig extrahiert werden."
                     )
-            elif len(detections) == 1:
+            elif (
+                len(detections) == 1
+                and prepared[0].extracted.is_complete
+                and prepared[0].extracted.extraction_confidence != "low"
+                and prepared[0].detected.detection_confidence != "low"
+                and any(group.ingredients for group in prepared[0].extracted.ingredient_groups)
+                and prepared[0].extracted.instruction_steps
+            ):
                 sole_candidate = db.get(ImportCandidate, candidates[0].id)
                 if sole_candidate is None or sole_candidate.status != "ready":
                     raise ImportLeaseLost(

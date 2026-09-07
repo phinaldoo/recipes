@@ -59,6 +59,8 @@ def _settings(**overrides: object) -> Settings:
 def _extracted(**overrides: object) -> ExtractedRecipe:
     values: dict[str, object] = {
         "title": "Kartoffelsuppe",
+        "ingredient_groups": [{"ingredients": [{"name": "Kartoffeln"}]}],
+        "instruction_steps": [{"text": "Kartoffeln kochen."}],
         "base_servings": "4",
         "description": "Cremig und warm",
         "nutrition": [
@@ -545,7 +547,7 @@ def test_detect_recipes_retries_unreliable_result_once(
     valid = _detected_document().model_dump(mode="json")
     client = _Client(
         [
-            _Response({"output_text": '{"recipes":[]}'}),
+            _Response({"output_text": '{"recipes":[{"title_hint":""}]}'}),
             _Response({"output_text": json.dumps(valid)}),
         ]
     )
@@ -561,7 +563,7 @@ def test_detect_recipes_retries_unreliable_result_once(
     assert len(client.requests) == 2
 
 
-def test_extract_recipe_accepts_multiple_isolated_region_images(
+def test_extract_recipe_accepts_multiple_full_page_images(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     client = _Client([_Response({"output_text": '{"title":"Mehrseitig"}'})])
@@ -1402,7 +1404,9 @@ def test_process_single_recipe_imports_immediately(
     pipeline._process_import_job(job.id)
 
     assert stages == ["preparing", "extracting", "extracting", "checking_images"]
-    assert captured["images"] == [b"crop"]
+    assert captured["content"] == (tmp_path / "source.bin").read_bytes()
+    assert "images" not in captured
+    assert captured["target_recipe"].title_hint == "Kartoffelsuppe"
     assert job.status == "completed"
     assert job.current_stage == "Rezept importiert"
     assert job.progress == 100
@@ -1736,9 +1740,11 @@ def test_two_recipes_are_extracted_and_receive_only_their_matching_image(
             red, _green, blue = image.convert("RGB").getpixel((image.width // 2, image.height // 2))
         return "red" if red > blue else "blue"
 
-    def extract(*, images: list[bytes], **_kwargs: object) -> ExtractedRecipe:
-        color = dominant_color(images[0])
-        if color == "red":
+    def extract(
+        *, content: bytes, target_recipe: DetectedRecipe, **_kwargs: object
+    ) -> ExtractedRecipe:
+        assert content == (tmp_path / "source.bin").read_bytes()
+        if target_recipe.title_hint == "Tomatensuppe":
             return _extracted(
                 title="Tomatensuppe",
                 ingredient_groups=[{"ingredients": [{"name": "Tomaten"}]}],
@@ -1833,13 +1839,15 @@ def test_single_candidate_is_only_finalized_after_second_extraction_attempt(
 
     def real_extract(
         *,
-        images: list[bytes],
+        content: bytes,
+        mime_type: str,
         existing_category_paths: list[str],
         settings: Settings,
         **_kwargs: object,
     ) -> ExtractedRecipe:
         return extraction_client.extract_recipe(
-            images=images,
+            content=content,
+            mime_type=mime_type,
             existing_category_paths=existing_category_paths,
             settings=settings,
         )
@@ -1850,8 +1858,8 @@ def test_single_candidate_is_only_finalized_after_second_extraction_attempt(
 
     candidate = next(item for item in db.added if isinstance(item, ImportCandidate))
     assert len(client.requests) == 2
-    assert job.status == "completed"
-    assert candidate.status == "imported"
+    assert job.status == "review"
+    assert candidate.status == "ready"
     assert candidate.title == "Gerettetes Rezept"
 
 
@@ -1881,13 +1889,15 @@ def test_multi_import_fails_only_exhausted_candidate_and_continues(
 
     def real_extract(
         *,
-        images: list[bytes],
+        content: bytes,
+        mime_type: str,
         existing_category_paths: list[str],
         settings: Settings,
         **_kwargs: object,
     ) -> ExtractedRecipe:
         return extraction_client.extract_recipe(
-            images=images,
+            content=content,
+            mime_type=mime_type,
             existing_category_paths=existing_category_paths,
             settings=settings,
         )
@@ -2719,3 +2729,126 @@ def test_restore_task_rejects_lock_flag_or_missing_restored_admin(
     assert job.current_stage == "Wiederherstellung fehlgeschlagen"
     assert releases == expected_releases
     assert not upload.exists()
+
+
+@pytest.mark.parametrize("mime_type", ["image/png", "application/pdf"])
+def test_targeted_extraction_preserves_full_source(
+    monkeypatch: pytest.MonkeyPatch, mime_type: str
+) -> None:
+    client = _Client([_Response({"output_text": '{"title":"Cognactorte"}'})])
+    _install_client(monkeypatch, client)
+    target = DetectedRecipe(
+        title_hint="Cognactorte",
+        identifying_description="Rechte Seite, mit Cognac und Schokoladenguss",
+        source_regions=[
+            RecipeSourceRegion(
+                page=1,
+                bounding_box=NormalizedBoundingBox(
+                    left=510,
+                    top=220,
+                    right=960,
+                    bottom=912,
+                ),
+            )
+        ],
+    )
+    extraction_client.extract_recipe(
+        content=b"complete source including all columns and continuation pages",
+        mime_type=mime_type,
+        target_recipe=target,
+        title_hint=target.title_hint,
+        existing_category_paths=[],
+        settings=_settings(),
+    )
+    inputs = client.requests[0]["json"]["input"][0]["content"]
+    assert "Cognactorte" in inputs[0]["text"]
+    assert target.identifying_description in inputs[0]["text"]
+    assert '"left": 510' in inputs[0]["text"]
+    attachment = inputs[1]
+    encoded = attachment.get("image_url", attachment.get("file_data"))
+    assert (
+        base64.b64decode(encoded.split(",", 1)[1])
+        == b"complete source including all columns and continuation pages"
+    )
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"is_complete": False},
+        {"extraction_confidence": "low"},
+        {"ingredient_groups": []},
+        {"instruction_steps": []},
+    ],
+)
+def test_incomplete_single_recipe_requires_review(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, overrides: dict[str, Any]
+) -> None:
+    db, _user, _asset, job, _stages, recipe = _install_pipeline_success_fakes(
+        monkeypatch,
+        tmp_path,
+        extracted=_extracted(**overrides),
+    )
+    pipeline._process_import_job(job.id)
+    assert job.status == "review"
+    assert job.result_recipe_id is None
+    candidate = next(item for item in db.added if isinstance(item, ImportCandidate))
+    assert candidate.status == "ready"
+    assert not recipe.original_assets
+
+
+def test_detection_accepts_no_recipes(monkeypatch: pytest.MonkeyPatch) -> None:
+    client = _Client([_Response({"output_text": '{"recipes":[],"warnings":[]}'})])
+    _install_client(monkeypatch, client)
+    result = extraction_client.detect_recipes(
+        content=b"math page", mime_type="image/png", settings=_settings()
+    )
+    assert result.recipes == []
+
+
+def test_cover_rotation_happens_after_crop() -> None:
+    from app.imports.source_media import crop_source_region
+
+    source = Image.new("RGB", (100, 60), "red")
+    source.paste("blue", (0, 0, 100, 30))
+    data = BytesIO()
+    source.save(data, format="PNG")
+    result = crop_source_region(
+        data.getvalue(), "image/png", RecipeSourceRegion(page=1), rotation_clockwise=90
+    )
+    with Image.open(BytesIO(result)) as rotated:
+        assert rotated.size == (60, 100)
+        assert rotated.getpixel((10, 50)) == (255, 0, 0)
+        assert rotated.getpixel((50, 50)) == (0, 0, 255)
+
+
+def test_optional_zoom_never_replaces_full_source(monkeypatch: pytest.MonkeyPatch) -> None:
+    client = _Client([_Response({"output_text": '{"title":"Torte"}'})])
+    _install_client(monkeypatch, client)
+    extraction_client.extract_recipe(
+        content=b"full page",
+        mime_type="image/png",
+        images=[b"optional zoom"],
+        title_hint="Torte",
+        existing_category_paths=[],
+        settings=_settings(),
+    )
+    inputs = client.requests[0]["json"]["input"][0]["content"]
+    images = [
+        base64.b64decode(item["image_url"].split(",", 1)[1])
+        for item in inputs
+        if item["type"] == "input_image"
+    ]
+    assert images == [b"full page", b"optional zoom"]
+
+
+def test_no_recipe_source_is_not_published(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    db, _user, _asset, job, _stages, recipe = _install_pipeline_success_fakes(
+        monkeypatch,
+        tmp_path,
+        detected=DetectedRecipeDocument(recipes=[]),
+    )
+    pipeline._process_import_job(job.id)
+    assert job.status == "failed"
+    assert not recipe.original_assets
+    assert not any(isinstance(item, ImportCandidate) for item in db.added)
