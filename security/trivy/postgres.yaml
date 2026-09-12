@@ -3,6 +3,9 @@ vulnerabilities:
     purls:
       - "pkg:apk/alpine/libcrypto3"
       - "pkg:apk/alpine/libssl3"
+      - "pkg:deb/debian/libssl3t64"
+      - "pkg:deb/debian/openssl"
+      - "pkg:deb/debian/openssl-provider-legacy"
     expired_at: 2026-12-03
     statement: PostgreSQL does not create an OpenSSL QUIC listener; the affected code is not invoked.
   - id: CVE-2025-68121

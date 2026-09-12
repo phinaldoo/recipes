@@ -1,5 +1,9 @@
 FROM node:24.20.0-bookworm-slim@sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e AS frontend
 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends --only-upgrade libpcre2-8-0 \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /build
 RUN npm install --global --ignore-scripts npm@12.0.2 \
     && npm install --prefix /tmp/npm-security-patches --no-save \
@@ -41,7 +45,7 @@ ENV PATH="/opt/venv/bin:$PATH" \
     PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl ca-certificates libmagic1 \
+    && apt-get install -y --no-install-recommends curl ca-certificates libmagic1 libpcre2-8-0 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /opt/venv /opt/venv
