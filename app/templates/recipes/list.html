@@ -8,12 +8,27 @@
 <form class="recipe-search" role="search" method="get" action="{{ search_action }}" data-recipe-search>
   <section class="page-heading page-heading--with-action recipe-search__heading">
     <div>
+      <p class="eyebrow">{{ t("design.collection") }}</p>
       <h1{% if not trash_mode|default(false) %} data-recipe-kind-heading{% endif %}>{{ t('recipes.trash_title') if trash_mode|default(false) else (t('recipes.kind.' ~ selected_recipe_kind) if selected_recipe_kind else t('recipes.title')) }}</h1>
+      {% if not trash_mode|default(false) %}<p class="page-intro">{{ t("design.recipes_intro") }}</p>{% endif %}
     </div>
+  </section>
+  <div class="recipe-search__toolbar">
+  {% if not trash_mode|default(false) %}
+  <fieldset class="recipe-kind-switch recipe-search__kind" data-recipe-kind-switch>
+    <legend class="sr-only">{{ t('recipes.kind_filter') }}</legend>
+    {% for kind in ['all', 'cooking', 'baking'] %}
+    <label class="recipe-kind-option recipe-kind-option--{{ kind }}">
+      <input type="radio" name="recipe_kind" value="{{ '' if kind == 'all' else kind }}" data-auto-submit {% if (kind == 'all' and not selected_recipe_kind) or kind == selected_recipe_kind %}checked{% endif %}>
+      <span>{{ recipe_kind_icon(kind) }}<span>{{ t('recipes.kind.' ~ kind) }}</span></span>
+    </label>
+    {% endfor %}
+  </fieldset>
+  {% endif %}
     <div class="recipe-search__actions">
       {% if trash_mode|default(false) %}<a class="button button--secondary" href="/rezepte">{{ t('recipes.back') }}</a>{% endif %}
       {% if not trash_mode|default(false) %}<details class="filter-popover" data-dropdown {% if selected_category_ids %}open{% endif %}>
-        <summary class="button button--secondary" data-recipe-filter-summary>{{ t('recipes.filter') }}{% if selected_category_ids %} · {{ selected_category_ids|length }}{% endif %}</summary>
+        <summary class="button button--secondary" data-recipe-filter-summary>{{ icon('filter') }}<span data-recipe-filter-label>{{ t('recipes.filter') }}{% if selected_category_ids %} · {{ selected_category_ids|length }}{% endif %}</span></summary>
         <div class="filter-panel">
           <fieldset>
             <legend>{{ t('recipes.combine_categories') }}</legend>
@@ -48,21 +63,10 @@
         </select>
       </label>
     </div>
-  </section>
-  {% if not trash_mode|default(false) %}
-  <fieldset class="recipe-kind-switch recipe-search__kind" data-recipe-kind-switch>
-    <legend class="sr-only">{{ t('recipes.kind_filter') }}</legend>
-    {% for kind in ['all', 'cooking', 'baking'] %}
-    <label class="recipe-kind-option recipe-kind-option--{{ kind }}">
-      <input type="radio" name="recipe_kind" value="{{ '' if kind == 'all' else kind }}" data-auto-submit {% if (kind == 'all' and not selected_recipe_kind) or kind == selected_recipe_kind %}checked{% endif %}>
-      <span>{{ recipe_kind_icon(kind) }}<span>{{ t('recipes.kind.' ~ kind) }}</span></span>
-    </label>
-    {% endfor %}
-  </fieldset>
-  {% endif %}
+  </div>
   <label class="sr-only" for="recipe-query">{{ t('recipes.search_label') }}</label>
   <div class="search-field">
-    <span aria-hidden="true">⌕</span>
+    <span>{{ icon('search') }}</span>
     <input id="recipe-query" name="q" type="search" value="{{ q }}" maxlength="300" placeholder="{{ t('recipes.search_placeholder') }}" autocomplete="off" aria-controls="recipe-results-region">
     <a href="{{ search_action }}" class="icon-button" aria-label="{{ t('recipes.clear_search') }}" data-recipe-search-link data-recipe-search-clear {% if not q %}hidden{% endif %}>×</a>
   </div>

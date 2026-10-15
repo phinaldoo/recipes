@@ -29,8 +29,8 @@ class Settings(BaseSettings):
     pwa_name: str = "Rezepte"
     pwa_short_name: str = "Rezepte"
     pwa_start_url: str = "/rezepte"
-    pwa_theme_color: str = "#18181b"
-    pwa_background_color: str = "#f7f4ee"
+    pwa_theme_color: str = "#f7f8f5"
+    pwa_background_color: str = "#f7f8f5"
 
     database_url: str = ""
     postgres_db: str = "recipe"

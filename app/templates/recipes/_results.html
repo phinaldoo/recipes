@@ -1,6 +1,7 @@
+{% from "_ui.html" import icon %}
 {% from "recipes/_skeletons.html" import recipe_skeleton_grid with context %}
 <div id="recipe-results-region" data-recipe-results-region aria-busy="false">
-  <p class="sr-only" role="status" aria-live="polite" aria-atomic="true" data-recipe-results-summary>{{ total }} {{ tp('recipes.found.one', 'recipes.found.other', total) }}</p>
+  <p class="results-summary" role="status" aria-live="polite" aria-atomic="true" data-recipe-results-summary>{{ total }} {{ tp('recipes.found.one', 'recipes.found.other', total) }}</p>
   {% if selected_category_ids %}
   <div class="active-filters" aria-label="{{ t('recipes.active_filters') }}">
     {% for category in categories if category.id|string in selected_category_ids %}
@@ -52,7 +53,7 @@
   </div>
   {% elif q or selected_category_ids or selected_recipe_kind %}
   <section class="empty-state">
-    <div class="empty-state__mark" aria-hidden="true">⌕</div>
+    <div class="empty-state__mark" aria-hidden="true">{{ icon("search") }}</div>
     <h2>{{ t('recipes.empty_search_title') }}</h2>
     <p>{{ t('recipes.empty_search_text') }}</p>
     <a class="button button--secondary" href="{{ '/papierkorb' if trash_mode|default(false) else '/rezepte' }}" data-recipe-search-link>{{ t('recipes.empty_search_reset') }}</a>
@@ -61,7 +62,7 @@
   <section class="empty-state"><div class="empty-state__mark" aria-hidden="true">✓</div><h2>{{ t('recipes.empty_trash_title') }}</h2><p>{{ t('recipes.empty_trash_text') }}</p><a class="button button--secondary" href="/rezepte">{{ t('recipes.back') }}</a></section>
   {% else %}
   <section class="empty-state">
-    <div class="empty-state__mark" aria-hidden="true">R</div>
+    <div class="empty-state__mark" aria-hidden="true">{{ icon("book") }}</div>
     <h2>{{ t('recipes.empty_title') }}</h2>
     <p>{{ t('recipes.empty_text') }}</p>
     <div class="button-group">

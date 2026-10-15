@@ -126,7 +126,7 @@ function syncFormWithUrl(url) {
   const sort = form.querySelector('select[name="sort"]');
   if (sort) sort.value = url.searchParams.get("sort") || "updated_desc";
 
-  const summary = form.querySelector("[data-recipe-filter-summary]");
+  const summary = form.querySelector("[data-recipe-filter-label]");
   if (summary) {
     const selectedCount = [...categoryInputs].filter((input) => input.checked).length;
     summary.textContent = selectedCount ? `${t("recipes.filter")} · ${selectedCount}` : t("recipes.filter");

@@ -3,7 +3,7 @@
 {% block page_id %}account{% endblock %}
 {% block content %}
 <section class="page-heading">
-  <h1>{{ t("account.title") }}</h1>
+  <h1>{{ t("account.title") }}</h1><p class="page-intro">{{ t("design.account_intro") }}</p>
 </section>
 {% if request.query_params.get('saved') == '1' %}
 <div class="alert alert--success" role="status">{{ t("account.saved") }}</div>

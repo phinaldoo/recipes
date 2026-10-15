@@ -891,6 +891,62 @@ MESSAGES: Final[dict[Locale, dict[str, str]]] = {
 # supported locales obvious during review. The order is English, German,
 # Simplified Chinese, Hindi, Spanish.
 _UI_MESSAGE_ROWS: Final[dict[str, tuple[str, str, str, str, str]]] = {
+    "design.collection": (
+        "Your collection",
+        "Deine Sammlung",
+        "你的收藏",
+        "आपका संग्रह",
+        "Tu colección",
+    ),
+    "design.recipes_intro": (
+        "Good food starts here. Find something you’ll love to make.",
+        "Gutes Essen beginnt hier. Finde etwas, das du gerne kochst.",
+        "美味从这里开始，发现你想做的菜。",
+        "अच्छे खाने की शुरुआत यहाँ से। कुछ ऐसा चुनें जो बनाना आपको पसंद हो।",
+        "La buena comida empieza aquí. Encuentra algo que te apetezca preparar.",
+    ),
+    "design.favorites_intro": (
+        "The recipes you come back to, all in one place.",
+        "Deine liebsten Rezepte, alle an einem Ort.",
+        "常做的拿手菜，都在这里。",
+        "आपकी बार-बार पसंद आने वाली रेसिपी, एक ही जगह।",
+        "Las recetas a las que siempre vuelves, en un solo lugar.",
+    ),
+    "design.categories_intro": (
+        "A little order for everything you love to cook.",
+        "Ein bisschen Ordnung für alles, was du gerne kochst.",
+        "为爱做的菜分门别类。",
+        "आप जो पकाना पसंद करते हैं, उसे व्यवस्थित रखें।",
+        "Un poco de orden para todo lo que te gusta cocinar.",
+    ),
+    "design.tags_intro": (
+        "Make your collection easier to explore and search.",
+        "Mach deine Sammlung leichter durchsuchbar.",
+        "让收藏更容易浏览和搜索。",
+        "अपने संग्रह को खोजना और देखना आसान बनाएँ।",
+        "Haz que tu colección sea más fácil de explorar y buscar.",
+    ),
+    "design.import_intro": (
+        "From a favorite website or a handwritten page to your collection.",
+        "Von deiner Lieblingswebsite oder einer handgeschriebenen Seite in deine Sammlung.",
+        "将喜爱的网站或手写食谱收入收藏。",
+        "अपनी पसंदीदा वेबसाइट या हस्तलिखित पन्ने से अपने संग्रह में जोड़ें।",
+        "De tu web favorita o una página escrita a mano a tu colección.",
+    ),
+    "design.account_intro": (
+        "Make yourself at home. Choose your preferences.",
+        "Fühl dich wie zu Hause. Wähle deine Einstellungen.",
+        "按你的喜好设置。",
+        "इसे अपना बनाएँ। अपनी प्राथमिकताएँ चुनें।",
+        "Siéntete como en casa. Elige tus preferencias.",
+    ),
+    "design.settings_intro": (
+        "Keep your shared kitchen running smoothly.",
+        "Damit eure gemeinsame Küche rundläuft.",
+        "让共享厨房顺畅运行。",
+        "अपनी साझा रसोई को सुचारु रूप से चलाएँ।",
+        "Mantén tu cocina compartida en buen estado.",
+    ),
     "a11y.breadcrumb": (
         "Breadcrumb navigation",
         "Brotkrümelnavigation",

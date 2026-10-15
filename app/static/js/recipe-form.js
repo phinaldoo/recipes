@@ -85,9 +85,19 @@ form.addEventListener("click", (event) => {
   else if (button.matches("[data-move-down]")) moveRow(button, 1);
 });
 
-if (!form.querySelector("[data-ingredient-row]")) form.querySelector("[data-add-ingredient]")?.click();
-if (!form.querySelector("[data-step-row]")) form.querySelector("[data-add-step]")?.click();
-dirty = false;
+// Initial rows should not move focus, scroll the page, or mark the form dirty.
+// Explicit Add actions above still focus the new field for keyboard users.
+if (!form.querySelector("[data-ingredient-row]")) {
+  form.querySelector("[data-ingredient-rows]")?.append(
+    ingredientTemplate.content.firstElementChild.cloneNode(true),
+  );
+}
+if (!form.querySelector("[data-step-row]")) {
+  form.querySelector("[data-step-list]").append(
+    stepTemplate.content.firstElementChild.cloneNode(true),
+  );
+}
+renumber();
 
 function updateTotal() {
   const manual = form.elements.total_time_is_manual.checked;

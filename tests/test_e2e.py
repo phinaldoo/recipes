@@ -124,6 +124,7 @@ def test_recipe_search_updates_without_document_navigation(logged_in_page: Page)
         page.get_by_role("searchbox", name="Rezepte durchsuchen").fill(search_term)
 
     assert searched.value.ok
+    expect(page.locator("[data-recipe-filter-summary] svg")).to_have_count(1)
     vary = {value.strip().casefold() for value in searched.value.headers["vary"].split(",")}
     assert "x-recipe-results" in vary
     assert "data-recipe-results-region" in searched.value.text()
@@ -839,7 +840,7 @@ def test_v1_organizing_and_share_lifecycles(logged_in_page: Page, new_context: N
 def test_mobile_and_desktop_navigation_fit_the_viewport(logged_in_page: Page) -> None:
     page = logged_in_page
 
-    for width, height in ((320, 568), (390, 844), (768, 1024)):
+    for width, height in ((320, 568), (390, 844), (768, 1024), (1023, 900)):
         page.set_viewport_size({"width": width, "height": height})
         page.goto(f"{BASE_URL}/rezepte")
         expect(page.locator(".mobile-nav")).to_be_visible()
@@ -849,7 +850,7 @@ def test_mobile_and_desktop_navigation_fit_the_viewport(logged_in_page: Page) ->
         ).to_be_visible()
         assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
 
-    for width in (896, 1280):
+    for width in (1024, 1280, 1440):
         page.set_viewport_size({"width": width, "height": 900})
         page.reload()
         expect(page.locator(".desktop-nav")).to_be_visible()
@@ -862,6 +863,30 @@ def test_mobile_and_desktop_navigation_fit_the_viewport(logged_in_page: Page) ->
             add_recipe_menu.get_by_role("link", name="Frei erstellen", exact=True)
         ).to_be_visible()
         assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
+
+
+@pytest.mark.parametrize("width", [320, 390, 768, 1024, 1280])
+def test_app_screens_fit_without_horizontal_scrolling(logged_in_page: Page, width: int) -> None:
+    page = logged_in_page
+    page.set_viewport_size({"width": width, "height": 900})
+    for path in (
+        "/rezepte",
+        "/rezepte/neu",
+        "/favoriten",
+        "/notizen",
+        "/kategorien",
+        "/schlagwoerter",
+        "/importieren",
+        "/importieren/laufend",
+        "/importieren/verlauf",
+        "/konto",
+        "/einstellungen",
+        "/papierkorb",
+    ):
+        response = page.goto(f"{BASE_URL}{path}")
+        assert response is not None and response.ok, path
+        expect(page.locator("main h1")).to_be_in_viewport()
+        assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth"), path
 
 
 def test_mobile_import_appends_repeated_photo_selections(logged_in_page: Page) -> None:

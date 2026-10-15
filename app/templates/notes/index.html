@@ -4,7 +4,7 @@
 {% block page_id %}notes{% endblock %}
 {% block content %}
 <section class="page-heading notes-heading">
-  <h1>{{ t('notes.title') }}</h1>
+  <h1>{{ t('notes.title') }}</h1><p class="page-intro">{{ t("notes.description") }}</p>
 </section>
 
 <div class="notes-layout">
@@ -14,7 +14,7 @@
         <h2 id="note-form-title" data-note-form-title>{{ t('notes.new') }}</h2>
         <p>{{ t('notes.optional_help') }}</p>
       </div>
-      <span class="note-private-badge"><span aria-hidden="true">●</span> {{ t('notes.private') }}</span>
+      <span class="note-private-badge">{{ icon("lock") }} {{ t('notes.private') }}</span>
     </header>
 
     <form class="note-form" data-note-form>
@@ -70,7 +70,7 @@
       </li>
       {% else %}
       <li class="notes-empty" data-notes-empty>
-        <span class="notes-empty__mark" aria-hidden="true">＋</span>
+        <span class="notes-empty__mark" aria-hidden="true">{{ icon("plus") }}</span>
         <span>
           <strong>{{ t('notes.empty_title') }}</strong>
           <small>{{ t('notes.empty_text') }}</small>

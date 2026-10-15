@@ -1,3 +1,4 @@
+{% from "_ui.html" import icon %}
 {% from "recipes/_favorite_toggle.html" import favorite_toggle with context %}
 {% from "recipes/_kind.html" import recipe_kind_badge with context %}
 {% for recipe in recipes %}
@@ -7,7 +8,7 @@
     {% if recipe.cover_image %}
     <img src="/api/v1/assets/{{ recipe.cover_image.thumbnail_asset_id or recipe.cover_image.media_asset_id }}/view" alt="" loading="lazy" width="640" height="480">
     {% else %}
-    <span class="image-placeholder"><span aria-hidden="true">R</span><span>{{ t('recipes.no_image') }}</span></span>
+    <span class="image-placeholder"><span aria-hidden="true">{{ icon("image") }}</span><span>{{ t('recipes.no_image') }}</span></span>
     {% endif %}
   {% if trash_mode|default(false) %}</div>{% else %}</a>{% endif %}
   {% if not trash_mode|default(false) %}
@@ -23,7 +24,7 @@
     </div>
     <h2>{% if trash_mode|default(false) %}{{ recipe.title }}{% else %}<a href="/rezepte/{{ recipe.id }}">{{ recipe.title }}</a>{% endif %}</h2>
     <div class="recipe-card__facts">
-      {% if recipe.total_time_minutes %}<span>{{ recipe.total_time_minutes|duration }}</span>{% endif %}
+      {% if recipe.total_time_minutes %}<span>{{ icon("clock") }}{{ recipe.total_time_minutes|duration }}</span>{% endif %}
       {% set comment_count = recipe.comments|default([])|selectattr('deleted_at', 'none')|list|length %}
       {% if comment_count %}<span>{{ comment_count }} {{ tp('recipes.note.one', 'recipes.note.other', comment_count) }}</span>{% endif %}
     </div>
