@@ -36,7 +36,6 @@
       </a>
       {% if current_user %}
       <nav class="desktop-nav" aria-label="{{ t('nav.main') }}">
-        <p class="nav-label">{{ t("design.collection") }}</p>
         <a href="/rezepte" {% if request.url.path.startswith('/rezepte') and request.url.path != '/rezepte/neu' %}aria-current="page"{% endif %}>{{ icon('book') }}<span>{{ t("nav.recipes") }}</span></a>
         <a href="/favoriten" {% if request.url.path == '/favoriten' %}aria-current="page"{% endif %}>{{ icon('star') }}<span>{{ t("nav.favorites") }}</span></a>
         <a href="/notizen" {% if request.url.path == '/notizen' %}aria-current="page"{% endif %}>{{ icon('note') }}<span>{{ t("nav.notes") }}</span></a>

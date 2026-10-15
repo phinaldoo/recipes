@@ -74,13 +74,11 @@ hr { border: 0; border-top: 1px solid var(--line); }
 
 /* Shared visual language */
 .ui-icon { display: inline-block; width: 1.25rem; height: 1.25rem; flex: 0 0 auto; vertical-align: middle; }
-.eyebrow, .nav-label { color: var(--muted); font-size: .7rem; font-weight: 650; letter-spacing: .1em; text-transform: uppercase; }
-.eyebrow { margin-bottom: .8rem; }
 .page-intro { max-width: 54ch; margin: .65rem 0 0; color: var(--muted); font-size: .92rem; line-height: 1.6; }
 .page-heading > div { min-width: 0; }
 .results-summary { margin: 0 0 var(--space-4); color: var(--muted); font-size: .76rem; }
 .recipe-search__toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); }
-.account-menu__label, .account-menu__more, .nav-label { display: none; }
+.account-menu__label, .account-menu__more { display: none; }
 .desktop-nav > a { display: flex; align-items: center; gap: .75rem; }
 .note-private-badge .ui-icon { width: .85rem; height: .85rem; }
 .upload-zone__icon { display: grid; width: 2.75rem; height: 2.75rem; place-items: center; margin-bottom: .5rem; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); }
@@ -813,7 +811,6 @@ body[data-page="recipe-shares"] .share-empty small { margin-top: .25rem; font-si
   .app-layout .brand { gap: .65rem; margin: 0 .75rem 2.75rem; }
   .app-layout .brand__mark { width: 2.1rem; }
   .desktop-nav { flex: 1; flex-direction: column; align-items: stretch; gap: .35rem; margin: 0; padding-bottom: 1.5rem; overflow-y: auto; }
-  .nav-label { display: block; margin: 0 .85rem .65rem; font-size: .65rem; }
   .desktop-nav > a:not(.button) { min-height: 2.9rem; padding: .7rem .85rem; font-size: .86rem; border-radius: var(--radius-sm); }
   .desktop-nav > a[aria-current="page"] { background: var(--accent-soft); color: var(--accent); font-weight: 650; }
   .desktop-nav > a .ui-icon { width: 1.1rem; height: 1.1rem; }
@@ -835,7 +832,6 @@ body[data-page="recipe-shares"] .share-empty small { margin-top: .25rem; font-si
 @media (max-width: 35.999rem) {
   .page-shell { width: calc(100% - 2.5rem); padding-top: 1.75rem; }
   .recipe-search { gap: 1rem; }
-  .recipe-search .eyebrow { display: none; }
   .site-header__inner { width: calc(100% - 2rem); min-height: 4rem; }
   .recipe-search__toolbar { gap: 1rem; }
   .recipe-search__kind { width: 100%; }

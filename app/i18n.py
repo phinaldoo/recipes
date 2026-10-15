@@ -891,13 +891,6 @@ MESSAGES: Final[dict[Locale, dict[str, str]]] = {
 # supported locales obvious during review. The order is English, German,
 # Simplified Chinese, Hindi, Spanish.
 _UI_MESSAGE_ROWS: Final[dict[str, tuple[str, str, str, str, str]]] = {
-    "design.collection": (
-        "Your collection",
-        "Deine Sammlung",
-        "你的收藏",
-        "आपका संग्रह",
-        "Tu colección",
-    ),
     "design.recipes_intro": (
         "Good food starts here. Find something you’ll love to make.",
         "Gutes Essen beginnt hier. Finde etwas, das du gerne kochst.",
