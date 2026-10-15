@@ -74,7 +74,6 @@ hr { border: 0; border-top: 1px solid var(--line); }
 
 /* Shared visual language */
 .ui-icon { display: inline-block; width: 1.25rem; height: 1.25rem; flex: 0 0 auto; vertical-align: middle; }
-.page-intro { max-width: 54ch; margin: .65rem 0 0; color: var(--muted); font-size: .92rem; line-height: 1.6; }
 .page-heading > div { min-width: 0; }
 .results-summary { margin: 0 0 var(--space-4); color: var(--muted); font-size: .76rem; }
 .recipe-search__toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); }
@@ -189,7 +188,7 @@ dialog::backdrop { background: rgb(0 0 0 / .4); backdrop-filter: blur(2px); }
 .login-card { box-shadow: var(--shadow-float); position: relative; width: min(100%, 26rem); padding: clamp(1.5rem, 6vw, 2.5rem); border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface); }
 .login-card__intro { margin: var(--space-7) 0 var(--space-6); }
 .login-card h1 { font-size: clamp(1.6rem, 6vw, 2.1rem); }
-.login-card__intro > p:last-child, .login-card__help { color: var(--muted); }
+.login-card__help { color: var(--muted); }
 .login-card__help { margin: var(--space-5) 0 0; font-size: .8rem; }
 .stack { display: grid; gap: var(--space-4); }
 
@@ -237,12 +236,14 @@ dialog::backdrop { background: rgb(0 0 0 / .4); backdrop-filter: blur(2px); }
 .recipe-kind-label--cooking { border-color: var(--cooking-line); background: var(--cooking-soft); color: var(--cooking); }
 .recipe-kind-label--baking { border-color: var(--baking-line); background: var(--baking-soft); color: var(--baking); }
 .recipe-card__kind { position: absolute; z-index: 2; top: .75rem; left: .75rem; box-shadow: none; }
-.favorite-toggle { position: absolute; top: .75rem; right: .75rem; z-index: 2; display: grid; width: 2.75rem; height: 2.75rem; place-items: center; padding: 0; border: 1px solid rgb(255 255 255 / .78); border-radius: 50%; background: rgb(255 255 255 / .92); color: #57534e; box-shadow: 0 2px 6px rgb(34 43 38 / .06); backdrop-filter: blur(8px); transition: color .15s ease, background-color .15s ease, border-color .15s ease, transform .15s ease; }
+.favorite-toggle { position: absolute; top: .75rem; right: .75rem; z-index: 2; display: grid; width: 2rem; height: 2rem; place-items: center; padding: 0; border: 1px solid rgb(255 255 255 / .78); border-radius: 50%; background: rgb(255 255 255 / .92); color: #57534e; box-shadow: 0 2px 6px rgb(34 43 38 / .06); backdrop-filter: blur(8px); transition: color .15s ease, background-color .15s ease, border-color .15s ease, transform .15s ease; }
+/* Keep a 44px hit area around the compact 32px favorite control. */
+.favorite-toggle::after { content: ""; position: absolute; inset: -.375rem; border-radius: 50%; }
 .favorite-toggle:hover { border-color: white; background: white; color: var(--ink); transform: translateY(-1px); }
 .favorite-toggle:disabled { cursor: wait; opacity: .72; }
 .favorite-toggle[aria-pressed="true"] { border-color: var(--cooking-line); background: var(--accent-soft); color: var(--accent); }
 .favorite-toggle[aria-pressed="true"]:hover { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
-.favorite-toggle svg { width: 1.3rem; height: 1.3rem; fill: transparent; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; transition: fill .15s ease, transform .15s ease; }
+.favorite-toggle svg { width: 1rem; height: 1rem; fill: transparent; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; transition: fill .15s ease, transform .15s ease; }
 .favorite-toggle[aria-pressed="true"] svg { fill: currentColor; }
 .favorite-toggle:not(:disabled):active svg { transform: scale(.9); }
 .image-placeholder { display: grid; width: 100%; height: 100%; place-items: center; align-content: center; gap: .45rem; color: var(--muted); font-size: .75rem; }

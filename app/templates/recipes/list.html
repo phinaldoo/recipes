@@ -9,7 +9,6 @@
   <section class="page-heading page-heading--with-action recipe-search__heading">
     <div>
       <h1{% if not trash_mode|default(false) %} data-recipe-kind-heading{% endif %}>{{ t('recipes.trash_title') if trash_mode|default(false) else (t('recipes.kind.' ~ selected_recipe_kind) if selected_recipe_kind else t('recipes.title')) }}</h1>
-      {% if not trash_mode|default(false) %}<p class="page-intro">{{ t("design.recipes_intro") }}</p>{% endif %}
     </div>
   </section>
   <div class="recipe-search__toolbar">

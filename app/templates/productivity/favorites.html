@@ -4,7 +4,7 @@
 {% set page_title = t('favorites.title') ~ ' · ' ~ t('recipes.title') %}
 {% block page_id %}favorites{% endblock %}
 {% block content %}
-<section class="page-heading page-heading--with-action"><div><h1>{{ t('favorites.title') }}</h1><p class="page-intro">{{ t("design.favorites_intro") }}</p></div><a class="button button--secondary" href="/rezepte">{{ t('favorites.all') }}</a></section>
+<section class="page-heading page-heading--with-action"><div><h1>{{ t('favorites.title') }}</h1></div><a class="button button--secondary" href="/rezepte">{{ t('favorites.all') }}</a></section>
 <nav class="recipe-kind-switch recipe-kind-switch--links" aria-label="{{ t('recipes.kind_filter') }}">
   {% for kind in ['all', 'cooking', 'baking'] %}
   <a class="recipe-kind-option recipe-kind-option--{{ kind }}" href="/favoriten{% if kind != 'all' %}?recipe_kind={{ kind }}{% endif %}" {% if (kind == 'all' and not selected_recipe_kind) or kind == selected_recipe_kind %}aria-current="page"{% endif %}>
