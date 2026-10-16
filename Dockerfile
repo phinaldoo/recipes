@@ -1,22 +1,24 @@
 FROM node:24.20.0-bookworm-slim@sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e AS frontend
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends --only-upgrade libpcre2-8-0 \
+    && apt-get install -y --no-install-recommends --only-upgrade libpcre2-8-0 perl-base \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /build
 RUN npm install --global --ignore-scripts npm@12.0.2 \
     && npm install --prefix /tmp/npm-security-patches --no-save \
       --ignore-scripts --no-audit \
-      brace-expansion@5.0.9 ip-address@10.3.1 tar@7.5.21 \
+      brace-expansion@5.0.11 ip-address@10.3.1 tar@7.5.21 undici@6.28.1 \
     && npm_modules="$(npm root --global)/npm/node_modules" \
     && rm -rf \
       "$npm_modules/brace-expansion" \
       "$npm_modules/ip-address" \
       "$npm_modules/tar" \
+      "$npm_modules/undici" \
     && cp -a /tmp/npm-security-patches/node_modules/brace-expansion "$npm_modules/" \
     && cp -a /tmp/npm-security-patches/node_modules/ip-address "$npm_modules/" \
     && cp -a /tmp/npm-security-patches/node_modules/tar "$npm_modules/" \
+    && cp -a /tmp/npm-security-patches/node_modules/undici "$npm_modules/" \
     && rm -rf /tmp/npm-security-patches \
     && npm --version
 COPY package.json package-lock.json ./
@@ -45,7 +47,7 @@ ENV PATH="/opt/venv/bin:$PATH" \
     PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl ca-certificates libmagic1 libpcre2-8-0 \
+    && apt-get install -y --no-install-recommends curl ca-certificates libmagic1 libpcre2-8-0 perl-base \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /opt/venv /opt/venv

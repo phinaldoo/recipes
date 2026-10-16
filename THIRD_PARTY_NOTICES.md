@@ -68,7 +68,7 @@ output; the project does not redistribute node_modules in this source repository
 
 ## Containers and services
 
-- The **Python Redis client** 6.4.0 is MIT. The separate **Redis server** 8.10.1
+- The **Python Redis client** 6.4.0 is MIT. The separate **Redis server** 8.10.2
   image is governed by Redis's choice of AGPLv3, RSALv2, or SSPLv1; see
   [Redis licensing](https://redis.io/legal/licenses/). These are distinct products.
   Select and comply with the appropriate server license for your use/distribution.

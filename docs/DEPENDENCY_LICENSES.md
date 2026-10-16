@@ -155,7 +155,7 @@ Includes optional platform-specific packages; only matching binaries are install
 | [vite](https://www.npmjs.com/package/vite/v/8.2.2) | 8.2.2 | MIT |
 
 Build images also install tools outside these application lockfiles: npm 12.0.2
-with brace-expansion 5.0.9, ip-address 10.3.1, and tar 7.5.21 security overrides.
+with brace-expansion 5.0.11, ip-address 10.3.1, tar 7.5.21, and undici 6.28.1 security overrides.
 Their own package notices must be retained if those build environments are
 redistributed. Caddy/Go modules and browser/OS packages are discussed separately
 in the top-level notices.
