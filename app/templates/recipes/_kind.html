@@ -8,9 +8,9 @@
 {% endif %}
 {%- endmacro %}
 
-{% macro recipe_kind_badge(kind, class_name='') -%}
-<span class="recipe-kind-label recipe-kind-label--{{ kind }}{% if class_name %} {{ class_name }}{% endif %}">
+{% macro recipe_kind_badge(kind, class_name='', icon_only=false) -%}
+<span class="recipe-kind-label recipe-kind-label--{{ kind }}{% if class_name %} {{ class_name }}{% endif %}"{% if icon_only %} title="{{ t('recipes.kind.' ~ kind) }}"{% endif %}>
   {{ recipe_kind_icon(kind) }}
-  <span>{{ t('recipes.kind.' ~ kind) }}</span>
+  <span{% if icon_only %} class="sr-only"{% endif %}>{{ t('recipes.kind.' ~ kind) }}</span>
 </span>
 {%- endmacro %}

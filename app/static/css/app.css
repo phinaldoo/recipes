@@ -235,7 +235,8 @@ dialog::backdrop { background: rgb(0 0 0 / .4); backdrop-filter: blur(2px); }
 .recipe-kind-label { display: inline-flex; min-height: 1.7rem; align-items: center; gap: .35rem; padding: .25rem .55rem; border: 1px solid; border-radius: 999px; font-size: .72rem; font-weight: 700; line-height: 1; white-space: nowrap; }
 .recipe-kind-label--cooking { border-color: var(--cooking-line); background: var(--cooking-soft); color: var(--cooking); }
 .recipe-kind-label--baking { border-color: var(--baking-line); background: var(--baking-soft); color: var(--baking); }
-.recipe-card__kind { position: absolute; z-index: 2; top: .75rem; left: .75rem; box-shadow: none; }
+.recipe-card__kind { position: absolute; z-index: 2; top: .75rem; left: .75rem; display: grid; width: 2rem; height: 2rem; place-items: center; padding: 0; border-radius: 50%; box-shadow: none; }
+.recipe-card__kind svg { width: 1rem; height: 1rem; }
 .favorite-toggle { position: absolute; top: .75rem; right: .75rem; z-index: 2; display: grid; width: 2rem; height: 2rem; place-items: center; padding: 0; border: 1px solid rgb(255 255 255 / .78); border-radius: 50%; background: rgb(255 255 255 / .92); color: #57534e; box-shadow: 0 2px 6px rgb(34 43 38 / .06); backdrop-filter: blur(8px); transition: color .15s ease, background-color .15s ease, border-color .15s ease, transform .15s ease; }
 /* Keep a 44px hit area around the compact 32px favorite control. */
 .favorite-toggle::after { content: ""; position: absolute; inset: -.375rem; border-radius: 50%; }

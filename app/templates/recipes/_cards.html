@@ -15,7 +15,7 @@
   {% set is_favorite = recipe.id in favorite_recipe_ids %}
   {{ favorite_toggle(recipe, is_favorite) }}
   {% endif %}
-  {{ recipe_kind_badge(card_recipe_kind, 'recipe-card__kind') }}
+  {{ recipe_kind_badge(card_recipe_kind, 'recipe-card__kind', icon_only=true) }}
   <div class="recipe-card__body">
     <div class="recipe-card__meta">
       {% set card_categories = recipe.categories|default([]) %}
