@@ -869,6 +869,7 @@ def test_mobile_and_desktop_navigation_fit_the_viewport(logged_in_page: Page) ->
 def test_app_screens_fit_without_horizontal_scrolling(logged_in_page: Page, width: int) -> None:
     page = logged_in_page
     page.set_viewport_size({"width": width, "height": 900})
+    overflowing_pages = []
     for path in (
         "/rezepte",
         "/rezepte/neu",
@@ -886,7 +887,10 @@ def test_app_screens_fit_without_horizontal_scrolling(logged_in_page: Page, widt
         response = page.goto(f"{BASE_URL}{path}")
         assert response is not None and response.ok, path
         expect(page.locator("main h1")).to_be_in_viewport()
-        assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth"), path
+        page.evaluate("document.fonts.ready")
+        if not page.evaluate("document.documentElement.scrollWidth <= window.innerWidth"):
+            overflowing_pages.append(path)
+    assert not overflowing_pages, f"Horizontal overflow at {width}px: {overflowing_pages}"
 
 
 def test_mobile_import_appends_repeated_photo_selections(logged_in_page: Page) -> None:

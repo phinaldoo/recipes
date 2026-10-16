@@ -53,7 +53,7 @@ button { cursor: pointer; }
 a { color: var(--accent); text-underline-offset: .18em; }
 a:hover { color: var(--accent-hover); }
 h1, h2, h3, p { margin-top: 0; }
-h1 { max-width: 26ch; font-size: clamp(1.9rem, 3.5vw, 2.65rem); font-weight: 650; line-height: 1.16; letter-spacing: -.045em; }
+h1 { max-width: 26ch; overflow-wrap: anywhere; hyphens: auto; font-size: clamp(1.9rem, 3.5vw, 2.65rem); font-weight: 650; line-height: 1.16; letter-spacing: -.045em; }
 h2 { margin-bottom: var(--space-3); font-size: clamp(1.1rem, 2vw, 1.3rem); font-weight: 600; line-height: 1.2; letter-spacing: -.015em; }
 h3 { margin-bottom: var(--space-2); font-size: 1rem; font-weight: 600; }
 code { padding: .1em .35em; border: 1px solid var(--line); border-radius: .35rem; background: var(--surface-muted); font-size: .92em; }
