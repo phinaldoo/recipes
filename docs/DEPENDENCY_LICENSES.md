@@ -104,7 +104,7 @@ when the lockfiles change. Runtime packages also appear in the development lock.
 | [text-unidecode](https://pypi.org/project/text-unidecode/1.3/) | 1.3 | Artistic / GPL alternatives; see package license |
 | [tomli](https://pypi.org/project/tomli/2.4.1/) | 2.4.1 | MIT |
 | [tomli-w](https://pypi.org/project/tomli-w/1.2.0/) | 1.2.0 | MIT |
-| [urllib3](https://pypi.org/project/urllib3/2.7.0/) | 2.7.0 | MIT |
+| [urllib3](https://pypi.org/project/urllib3/2.8.0/) | 2.8.0 | MIT |
 | [pip](https://pypi.org/project/pip/26.2.1/) | 26.2.1 | MIT |
 
 ## Frontend build dependencies
@@ -150,12 +150,12 @@ Includes optional platform-specific packages; only matching binaries are install
 | [picomatch](https://www.npmjs.com/package/picomatch/v/4.0.7) | 4.0.7 | MIT |
 | [postcss](https://www.npmjs.com/package/postcss/v/8.5.26) | 8.5.26 | MIT |
 | [rolldown](https://www.npmjs.com/package/rolldown/v/1.2.6) | 1.2.6 | MIT |
-| [source-map-js](https://www.npmjs.com/package/source-map-js/v/1.2.1) | 1.2.1 | BSD-3-Clause |
+| [source-map-js](https://www.npmjs.com/package/source-map-js/v/1.2.2) | 1.2.2 | BSD-3-Clause |
 | [tinyglobby](https://www.npmjs.com/package/tinyglobby/v/0.2.17) | 0.2.17 | MIT |
 | [vite](https://www.npmjs.com/package/vite/v/8.2.2) | 8.2.2 | MIT |
 
 Build images also install tools outside these application lockfiles: npm 12.0.2
-with brace-expansion 5.0.9, ip-address 10.3.1, and tar 7.5.21 security overrides.
+with brace-expansion 5.0.11, ip-address 10.3.1, tar 7.5.21, and undici 6.28.1 security overrides.
 Their own package notices must be retained if those build environments are
 redistributed. Caddy/Go modules and browser/OS packages are discussed separately
 in the top-level notices.

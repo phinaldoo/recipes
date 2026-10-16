@@ -2,7 +2,7 @@ name: rezeptverwaltung
 
 services:
   proxy:
-    image: recipes-caddy:2.11.4-go1.27.1
+    image: recipes-caddy:2.11.4-go1.27.2
     build:
       context: .
       dockerfile: Dockerfile.caddy
@@ -169,7 +169,7 @@ services:
       retries: 10
 
   db:
-    image: postgres:17.11-trixie@sha256:67f41722b7a8cbdb868a44a4995c846eddfdc2973bccb291ce937dce88ad5675
+    image: postgres:17.11-trixie@sha256:2d2b8998d31037bf721cfdf764d76ba74171b4fab3431b7f72c27c56ddbdf9e3
     restart: unless-stopped
     environment:
       POSTGRES_DB: "${POSTGRES_DB:-recipe}"
@@ -190,7 +190,7 @@ services:
       - no-new-privileges:true
 
   redis:
-    image: redis:8.10.1@sha256:298e5b3bc566bade82f46ad5511777a4a07a294097ce16ada2f6a42be5239df5
+    image: redis:8.10.2@sha256:2c2dff791878316e3b083188be0d578423b24813cdda5de0e80ea4f7b3e6bfd6
     restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
     expose:

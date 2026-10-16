@@ -1,9 +1,10 @@
+{% from "_ui.html" import icon %}
 <!doctype html>
 <html lang="{{ locale }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#18181b">
+  <meta name="theme-color" content="#f7f8f5">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -25,7 +26,7 @@
   <title>{{ page_title|default(t('app.name')) }}</title>
   {% block head %}{% endblock %}
 </head>
-<body data-page="{% block page_id %}default{% endblock %}">
+<body class="{% if current_user %}app-layout{% endif %}" data-page="{% block page_id %}default{% endblock %}">
   <a class="skip-link" href="#main-content">{{ t("nav.skip") }}</a>
   <header class="site-header">
     <div class="site-header__inner">
@@ -35,14 +36,14 @@
       </a>
       {% if current_user %}
       <nav class="desktop-nav" aria-label="{{ t('nav.main') }}">
-        <a href="/rezepte" {% if request.url.path == '/rezepte' %}aria-current="page"{% endif %}>{{ t("nav.recipes") }}</a>
-        <a href="/favoriten" {% if request.url.path == '/favoriten' %}aria-current="page"{% endif %}>{{ t("nav.favorites") }}</a>
-        <a href="/notizen" {% if request.url.path == '/notizen' %}aria-current="page"{% endif %}>{{ t("nav.notes") }}</a>
-        <a href="/kategorien" {% if request.url.path == '/kategorien' %}aria-current="page"{% endif %}>{{ t("nav.categories") }}</a>
-        <a href="/schlagwoerter" {% if request.url.path == '/schlagwoerter' %}aria-current="page"{% endif %}>{{ t("nav.tags") }}</a>
+        <a href="/rezepte" {% if request.url.path.startswith('/rezepte') and request.url.path != '/rezepte/neu' %}aria-current="page"{% endif %}>{{ icon('book') }}<span>{{ t("nav.recipes") }}</span></a>
+        <a href="/favoriten" {% if request.url.path == '/favoriten' %}aria-current="page"{% endif %}>{{ icon('star') }}<span>{{ t("nav.favorites") }}</span></a>
+        <a href="/notizen" {% if request.url.path == '/notizen' %}aria-current="page"{% endif %}>{{ icon('note') }}<span>{{ t("nav.notes") }}</span></a>
+        <a href="/kategorien" {% if request.url.path == '/kategorien' %}aria-current="page"{% endif %}>{{ icon('folder') }}<span>{{ t("nav.categories") }}</span></a>
+        <a href="/schlagwoerter" {% if request.url.path == '/schlagwoerter' %}aria-current="page"{% endif %}>{{ icon('tag') }}<span>{{ t("nav.tags") }}</span></a>
         <details class="action-menu add-recipe-menu" data-dropdown>
           <summary class="button button--primary button--small">
-            {{ t("nav.add_recipe") }}
+            {{ icon("plus") }}{{ t("nav.add_recipe") }}
             <span class="add-recipe-menu__chevron" aria-hidden="true"></span>
           </summary>
           <div class="action-menu__panel add-recipe-menu__panel">
@@ -54,6 +55,8 @@
       <details class="account-menu" data-dropdown>
         <summary aria-label="{{ t('account.menu', name=current_user.visible_name) }}">
           <span class="avatar" aria-hidden="true">{{ current_user.visible_name[:1]|upper }}</span>
+          <span class="account-menu__label"><strong>{{ current_user.visible_name }}</strong><small>{{ t('account.admin') if current_user.role == 'admin' else t('account.member') }}</small></span>
+          {{ icon('more', 'account-menu__more') }}
         </summary>
         <div class="account-menu__panel">
           <p class="account-menu__identity">{{ current_user.visible_name }}</p>
@@ -77,17 +80,17 @@
 
   {% if current_user %}
   <nav class="mobile-nav" aria-label="{{ t('nav.mobile') }}">
-    <a href="/rezepte" {% if request.url.path == '/rezepte' %}aria-current="page"{% endif %}>
-      <span aria-hidden="true">⌂</span><span>{{ t("nav.recipes") }}</span>
+    <a href="/rezepte" {% if request.url.path.startswith('/rezepte') and request.url.path != '/rezepte/neu' %}aria-current="page"{% endif %}>
+      {{ icon('book') }}<span>{{ t("nav.recipes") }}</span>
     </a>
     <a href="/rezepte/neu" {% if request.url.path == '/rezepte/neu' %}aria-current="page"{% endif %}>
-      <span aria-hidden="true">＋</span><span>{{ t("nav.new") }}</span>
+      {{ icon('plus') }}<span>{{ t("nav.new") }}</span>
     </a>
     <a href="/importieren" {% if request.url.path.startswith('/importieren') %}aria-current="page"{% endif %}>
-      <span aria-hidden="true">⇧</span><span>{{ t("nav.import") }}</span>
+      {{ icon('upload') }}<span>{{ t("nav.import") }}</span>
     </a>
-    <button type="button" data-mobile-more {% if request.url.path == '/notizen' %}aria-current="page"{% endif %}>
-      <span aria-hidden="true">•••</span><span>{{ t("nav.more") }}</span>
+    <button type="button" data-mobile-more {% if request.url.path in ['/notizen', '/favoriten', '/kategorien', '/schlagwoerter', '/konto', '/einstellungen', '/papierkorb'] %}aria-current="page"{% endif %}>
+      {{ icon('more') }}<span>{{ t("nav.more") }}</span>
     </button>
   </nav>
   <dialog class="mobile-more" data-mobile-more-dialog aria-labelledby="mobile-more-title">

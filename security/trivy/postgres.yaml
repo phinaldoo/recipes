@@ -97,3 +97,20 @@ vulnerabilities:
     paths: *gosu_path
     expired_at: *review_date
     statement: *gosu_statement
+  # Reviewed against gosu 1.19 in the pinned PostgreSQL image:
+  # https://github.com/tianon/gosu/blob/1.19/main.go
+  # https://github.com/tianon/gosu/blob/1.19/setup-user.go
+  # It reads local user/group files, switches credentials, and execs PostgreSQL.
+  # It does not serve HTTP/HTTP2 or process TLS handshakes.
+  - id: CVE-2026-78667
+    paths: *gosu_path
+    expired_at: *review_date
+    statement: HTTP Range request handling is unreachable in gosu's local user-switch and exec path.
+  - id: CVE-2026-78669
+    paths: *gosu_path
+    expired_at: *review_date
+    statement: HTTP/2 SETTINGS processing is unreachable in gosu's local user-switch and exec path.
+  - id: CVE-2026-97031
+    paths: *gosu_path
+    expired_at: *review_date
+    statement: TLS ECH handshake processing is unreachable in gosu's local user-switch and exec path.
