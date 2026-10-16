@@ -737,6 +737,8 @@ body[data-page="tags"] .page-heading { margin-bottom: var(--space-6); }
 body[data-page="tags"] .productivity-layout { align-items: start; }
 body[data-page="tags"] .productivity-card { padding: clamp(1.25rem, 3vw, 2rem); }
 .productivity-card__header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-5); }
+body[data-page="tags"] .productivity-card__header { flex-wrap: wrap; }
+body[data-page="tags"] .productivity-card__header > div { flex: 1 1 12rem; min-width: 0; }
 .productivity-card__header h2 { margin-bottom: .35rem; }
 .productivity-card__header p { max-width: 40ch; margin-bottom: 0; color: var(--muted); font-size: .86rem; line-height: 1.45; }
 .management-count { flex: 0 0 auto; padding: .3rem .6rem; border-radius: 999px; background: var(--surface-muted); color: var(--muted); font-size: .72rem; font-weight: 600; white-space: nowrap; }
