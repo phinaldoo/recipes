@@ -713,15 +713,12 @@ def test_import_page_does_not_render_originals_banner(
     response = client.get("/importieren")
 
     assert response.status_code == 200
-    assert "Rezepte importieren" in response.text
-    assert (
-        '<a class="button button--secondary" href="/importieren/verlauf">'
-        "Importverlauf anzeigen</a>" in response.text
-    )
-    assert 'href="/importieren/laufend">Laufende Importe und offene Auswahl</a>' in response.text
-    assert response.text.index('href="/importieren/verlauf"') > response.text.index(
-        "data-json-import"
-    )
+    assert "Deine Rezepte ergänzen" in response.text
+    assert "data-import-workspace" in response.text
+    assert "data-import-list" in response.text
+    assert "data-import-dialog" in response.text
+    assert 'href="/importieren/verlauf"' not in response.text
+    assert 'href="/importieren/laufend"' not in response.text
     assert '<aside class="privacy-note">' not in response.text
     assert "Rezept hinzufügen" in response.text
     assert 'href="/importieren" aria-current="page">Importieren</a>' in response.text
@@ -749,65 +746,16 @@ def test_recipe_form_offers_clipboard_paste_drop_and_file_selection(
     assert main.frontend_assets.url("js/recipe-form.js") in response.text
 
 
-def test_running_imports_page_lists_active_batches(
-    client: TestClient, fake_db: FakeSession, monkeypatch: pytest.MonkeyPatch
+@pytest.mark.parametrize("path", ["/importieren/laufend", "/importieren/verlauf"])
+def test_legacy_import_pages_redirect_to_workspace(
+    path: str, client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     session = make_login_session()
     app.dependency_overrides[current_session] = lambda: session
     monkeypatch.setattr(main, "get_session", lambda *_args: session)
-    batch_id = uuid.uuid4()
-    fake_db.scalars_result = [
-        SimpleNamespace(
-            id=batch_id,
-            created_at=datetime.now(UTC),
-            status="processing",
-            total_jobs=2,
-            completed_jobs=1,
-            failed_jobs=0,
-        )
-    ]
-
-    response = client.get("/importieren/laufend")
-
-    assert response.status_code == 200
-    assert "Laufende Importe" in response.text
-    assert f'href="/importieren/{batch_id}"' in response.text
-    assert "Fortschritt anzeigen" in response.text
-    assert "1 fertig" in response.text
-
-
-def test_running_imports_page_surfaces_multi_recipe_selection(
-    client: TestClient, fake_db: FakeSession, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    session = make_login_session()
-    app.dependency_overrides[current_session] = lambda: session
-    monkeypatch.setattr(main, "get_session", lambda *_args: session)
-    batch_id = uuid.uuid4()
-    fake_db.scalars_result = [
-        SimpleNamespace(
-            id=batch_id,
-            created_at=datetime.now(UTC),
-            status="review",
-            total_jobs=1,
-            completed_jobs=0,
-            failed_jobs=0,
-            jobs=[
-                SimpleNamespace(
-                    candidates=[
-                        SimpleNamespace(status="ready"),
-                        SimpleNamespace(status="ready"),
-                    ]
-                )
-            ],
-        )
-    ]
-
-    response = client.get("/importieren/laufend")
-
-    assert response.status_code == 200
-    assert "Auswahl erforderlich" in response.text
-    assert "Rezepte auswählen" in response.text
-    assert f'href="/importieren/{batch_id}"' in response.text
+    response = client.get(path, follow_redirects=False)
+    assert response.status_code == 303
+    assert response.headers["location"] == "/importieren"
 
 
 def _ready_import_candidate(title: str) -> SimpleNamespace:
@@ -881,13 +829,13 @@ def test_import_batch_renders_full_multi_recipe_review_and_preselects_ready_cand
         jobs=[job],
     )
 
-    response = client.get(f"/importieren/{batch_id}")
+    response = client.get(f"/importieren/{batch_id}/panel")
 
     assert response.status_code == 200
-    assert "Erkannte Rezepte auswählen" in response.text
+    assert "Rezepte prüfen" in response.text
     assert f'data-candidate-id="{first_candidate.id}"' in response.text
-    assert f'value="{first_candidate.id}" data-candidate-select checked' in response.text
-    assert f'value="{second_candidate.id}" data-candidate-select checked' in response.text
+    assert f'data-candidate-select value="{first_candidate.id}" checked' in response.text
+    assert f'data-candidate-select value="{second_candidate.id}" checked' in response.text
     assert f"/api/v1/imports/candidates/{first_candidate.id}/image" in response.text
     assert "Kartoffeln" in response.text and "Kartoffeln kochen." in response.text
     assert "Ausgewählte Rezepte übernehmen" in response.text
@@ -930,7 +878,7 @@ def test_completed_single_recipe_has_no_review_or_import_action(
         jobs=[job],
     )
 
-    response = client.get(f"/importieren/{batch_id}")
+    response = client.get(f"/importieren/{batch_id}/panel")
 
     assert response.status_code == 200
     assert "Import abgeschlossen" in response.text
@@ -938,79 +886,47 @@ def test_completed_single_recipe_has_no_review_or_import_action(
     assert "Rezepte sind jetzt in deiner Sammlung verfügbar" not in response.text
     assert "data-candidate-review" not in response.text
     assert "data-candidate-select" not in response.text
-    assert "data-candidate-selected-count" not in response.text
+    assert "data-save-candidates" not in response.text
     assert "data-candidate-toggle-all" not in response.text
     assert "Rezept übernehmen" not in response.text
     assert f'href="/rezepte/{recipe_id}"' in response.text
 
 
-def test_running_imports_page_has_empty_state(
-    client: TestClient, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_import_workspace_empty_state(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     session = make_login_session()
     app.dependency_overrides[current_session] = lambda: session
     monkeypatch.setattr(main, "get_session", lambda *_args: session)
-
-    response = client.get("/importieren/laufend")
-
+    response = client.get("/importieren")
     assert response.status_code == 200
-    assert "Keine laufenden Importe" in response.text
+    assert "Hier beginnt dein nächstes Lieblingsrezept" in response.text
 
 
-def test_import_history_lists_completed_and_failed_jobs_with_retry(
+def test_import_deep_link_preserves_search_and_filter(
     client: TestClient, fake_db: FakeSession, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     session = make_login_session()
     app.dependency_overrides[current_session] = lambda: session
     monkeypatch.setattr(main, "get_session", lambda *_args: session)
     batch_id = uuid.uuid4()
-    failed_job_id = uuid.uuid4()
-    recipe_id = uuid.uuid4()
-    fake_db.scalars_result = [
-        SimpleNamespace(
-            id=batch_id,
-            created_at=datetime.now(UTC),
-            status="completed_with_errors",
-            total_jobs=2,
-            completed_jobs=1,
-            failed_jobs=1,
-            jobs=[
-                SimpleNamespace(
-                    id=failed_job_id,
-                    input_type="url",
-                    source_url="https://example.test/kaputt",
-                    source_asset=None,
-                    status="failed",
-                    current_stage="Fehlgeschlagen",
-                    progress=25,
-                    error_message="Die Webseite hat nicht rechtzeitig geladen.",
-                    result_recipe_id=None,
-                ),
-                SimpleNamespace(
-                    id=uuid.uuid4(),
-                    input_type="image",
-                    source_url=None,
-                    source_asset=None,
-                    status="completed",
-                    current_stage="Import abgeschlossen",
-                    progress=100,
-                    error_message=None,
-                    result_recipe_id=recipe_id,
-                ),
-            ],
-        )
-    ]
-
-    response = client.get("/importieren/verlauf")
-
+    fake_db.scalar_result = SimpleNamespace(id=batch_id, created_by_user_id=session.user.id)
+    response = client.get(f"/importieren/{batch_id}?q=pancakes&filter=saved")
     assert response.status_code == 200
-    assert "Importverlauf" in response.text
-    assert "Mit Fehlern beendet" in response.text
-    assert "Die Webseite hat nicht rechtzeitig geladen." in response.text
-    assert f'data-job-id="{failed_job_id}"' in response.text
-    assert "data-job-retry" in response.text
-    assert f'href="/rezepte/{recipe_id}"' in response.text
-    assert "completed_with_errors" not in response.text
+    assert f'data-open-batch="{batch_id}"' in response.text
+    assert 'value="pancakes"' in response.text
+    assert 'data-import-filter="saved" aria-pressed="true"' in response.text
+
+
+@pytest.mark.parametrize("suffix", ["", "/panel"])
+def test_import_workspace_cannot_open_another_members_batch(
+    suffix: str, client: TestClient, fake_db: FakeSession, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    session = make_login_session()
+    app.dependency_overrides[current_session] = lambda: session
+    monkeypatch.setattr(main, "get_session", lambda *_args: session)
+    batch_id = uuid.uuid4()
+    fake_db.scalar_result = SimpleNamespace(id=batch_id, created_by_user_id=uuid.uuid4())
+    response = client.get(f"/importieren/{batch_id}{suffix}")
+    assert response.status_code == 403
 
 
 def test_invalid_login_is_generic_and_uses_dummy_password_hash(

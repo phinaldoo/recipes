@@ -1,10 +1,39 @@
-{% extends "base.html" %}{% set page_title = t('import.title') ~ ' · ' ~ t('recipes.title') %}{% block page_id %}imports{% endblock %}
-{% block content %}<section class="page-heading"><h1>{{ t('import.title') }}</h1></section>
-<div class="import-grid">
-  <section class="import-card"><div class="import-card__number">{{ icon("image") }}</div><h2>{{ t('import.files_title') }}</h2><p>{{ t('import.files_text') }}</p><form data-file-import><label class="upload-zone" for="import-files"><span class="upload-zone__icon">{{ icon("upload") }}</span><strong>{{ t('import.choose_files') }}</strong><span>{{ t('import.file_formats') }}</span><input id="import-files" name="files" type="file" accept="image/*,.heic,application/pdf" multiple></label><div class="file-selection" data-file-selection aria-live="polite" hidden></div><p class="alert alert--warning" data-file-selection-message role="status" hidden></p><progress max="100" value="0" data-upload-progress aria-label="{{ t('import.upload_progress') }}" hidden>0%</progress><button class="button button--primary button--block" type="submit" disabled>{{ t('import.files_submit') }}</button></form></section>
-  <section class="import-card"><div class="import-card__number">{{ icon("link") }}</div><h2>{{ t('import.urls_title') }}</h2><p>{{ t('import.urls_text') }}</p><form data-url-import><div class="field"><label class="import-card__url-label" for="import-urls">{{ t('import.urls_title') }}</label><textarea id="import-urls" rows="7" placeholder="{{ t('import.urls_placeholder') }}" required></textarea><p class="field-help">{{ t('import.urls_help') }}</p></div><button class="button button--primary button--block" type="submit">{{ t('import.urls_submit') }}</button></form></section>
-  <section class="import-card"><div class="import-card__number">{{ icon("package") }}</div><h2>{{ t('import.package_title') }}</h2><p>{{ t('import.package_text') }}</p><form data-json-import><label class="upload-zone upload-zone--compact" for="import-json"><span class="upload-zone__icon">{{ icon("package") }}</span><strong>{{ t('import.choose_package') }}</strong><input id="import-json" name="file" type="file" accept="application/json,.json,.rezept.json" required></label><button class="button button--secondary button--block" type="submit">{{ t('import.package_submit') }}</button></form></section>
-</div><div class="alert" data-import-message role="status" hidden></div>
-<div class="import-actions"><a class="button button--secondary" href="/importieren/verlauf">{{ t('import.show_history') }}</a><a class="button button--text" href="/importieren/laufend">{{ t('import.show_running') }}</a></div>
+{% extends "base.html" %}
+{% set page_title = t('import.title') ~ ' · ' ~ t('recipes.title') %}
+{% block page_id %}imports{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ asset('css/import-workspace.css') }}">{% endblock %}
+{% block content %}
+<section class="page-heading"><h1>{{ t('nav.import') }}</h1></section>
+<div class="iw-workspace" data-import-workspace data-open-batch="{{ open_batch_id|default('') }}" data-max-upload="{{ import_max_mb }}">
+  <section class="iw-composer" aria-labelledby="iw-add">
+    <div class="iw-composer-head"><h2 id="iw-add">{{ t('workspace.add') }}</h2><div class="iw-tabs" role="tablist" aria-label="{{ t('common.source') }}">
+      <button id="iw-link-tab" type="button" role="tab" aria-selected="true" aria-controls="iw-link-panel" data-source-tab="link">{{ icon('link') }}{{ t('workspace.link') }}</button>
+      <button id="iw-file-tab" type="button" role="tab" aria-selected="false" tabindex="-1" aria-controls="iw-file-panel" data-source-tab="file">{{ icon('image') }}{{ t('workspace.files') }}</button>
+    </div></div>
+    <form id="iw-link-panel" role="tabpanel" aria-labelledby="iw-link-tab" data-url-import>
+      <div class="iw-link-input">{{ icon('link') }}<label class="sr-only" for="import-urls">{{ t('import.urls_title') }}</label><textarea id="import-urls" rows="1" placeholder="{{ t('workspace.link_placeholder') }}" required></textarea><button class="button button--primary" type="submit">{{ t('nav.import') }}{{ icon('arrow') }}</button></div>
+      <p class="iw-hint">{{ t('workspace.link_hint') }}</p>
+    </form>
+    <div id="iw-file-panel" role="tabpanel" aria-labelledby="iw-file-tab" hidden>
+      <form data-file-import>
+        <label class="iw-drop" for="import-files" data-drop-zone><span class="upload-zone__icon">{{ icon('upload') }}</span><strong>{{ t('workspace.drop') }}</strong><span>{{ t('workspace.file_hint') }}</span><input id="import-files" class="sr-only" type="file" accept="image/jpeg,image/png,image/webp,image/heic,.heic,.heif,application/pdf" multiple></label>
+        <div class="file-selection" data-file-selection aria-live="polite" hidden></div><p class="alert alert--warning" data-file-selection-message role="status" hidden></p>
+        <progress max="100" value="0" data-upload-progress aria-label="{{ t('import.upload_progress') }}" hidden></progress>
+        <div class="iw-file-actions"><span class="iw-hint">{{ t('import.file_formats') }}</span><button class="button button--primary" type="submit" disabled>{{ t('import.files_submit') }}</button></div>
+      </form>
+      <details class="iw-package"><summary>{{ t('workspace.package') }}</summary><form data-json-import><label for="import-json" class="sr-only">{{ t('import.choose_package') }}</label><input id="import-json" type="file" accept="application/json,.json,.rezept.json" required><button class="button button--secondary" type="submit">{{ t('import.package_submit') }}</button></form></details>
+    </div>
+    <div class="alert" data-import-message role="status" hidden></div>
+  </section>
+  <section class="iw-activity" aria-labelledby="iw-activity-title">
+    <div class="iw-section-head"><h2 id="iw-activity-title">{{ t('workspace.imports') }}</h2><label class="iw-search">{{ icon('search') }}<input type="search" data-import-search maxlength="200" value="{{ import_query }}" placeholder="{{ t('workspace.search') }}" aria-label="{{ t('workspace.search') }}"></label></div>
+    <div class="iw-filters" role="group" aria-label="{{ t('common.search') }}">{% for key in ['all','attention','saved'] %}<button type="button" data-import-filter="{{ key }}" aria-pressed="{{ 'true' if import_filter == key else 'false' }}">{{ t('workspace.' ~ key) }}</button>{% endfor %}<button class="icon-button" type="button" data-refresh-imports aria-label="{{ t('common.refresh') }}">{{ icon('refresh') }}</button></div>
+    <div class="alert" data-list-error role="status" hidden></div>
+    <div data-import-list>{% include 'imports/_list.html' %}</div>
+    <p class="iw-footnote">{{ t('workspace.saved_note') }}</p>
+  </section>
+</div>
+<dialog class="iw-dialog" data-import-dialog aria-labelledby="iw-dialog-title"><div data-panel-content></div></dialog>
+<noscript><p class="alert">{{ t('workspace.javascript') }}</p></noscript>
 {% endblock %}
-{% block scripts %}<script type="module" src="{{ asset('js/import-queue.js') }}"></script>{% endblock %}
+{% block scripts %}<script type="module" src="{{ asset('js/import-workspace.js') }}"></script>{% endblock %}

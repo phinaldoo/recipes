@@ -1,11 +1,14 @@
 from __future__ import annotations
 
-from datetime import UTC
+from datetime import UTC, datetime
 from pathlib import Path
 
 from sqlalchemy.orm import Session
 
 from app.models import (
+    ImportBatch,
+    ImportCandidate,
+    ImportJob,
     Recipe,
     RecipeComment,
     RecipeImage,
@@ -19,7 +22,9 @@ from app.services.recipes import create_recipe, refresh_search_document
 from app.services.storage import resolve_storage_key, store_bytes
 
 
-def import_recipe_package(db: Session, package: RecipePackage, user: User) -> Recipe:
+def import_recipe_package(
+    db: Session, package: RecipePackage, user: User, *, batch: ImportBatch | None = None
+) -> Recipe:
     data = package.recipe.model_dump(
         exclude={
             "comments",
@@ -107,6 +112,29 @@ def import_recipe_package(db: Session, package: RecipePackage, user: User) -> Re
         recipe.updated_by_name_snapshot = package.recipe.updated_by_name or user.visible_name
         db.flush()
         refresh_search_document(db, recipe)
+        if batch is not None:
+            batch.jobs = [
+                ImportJob(
+                    input_type="recipe_json",
+                    status="completed",
+                    progress=100,
+                    current_stage="Import abgeschlossen",
+                    result_recipe_id=recipe.id,
+                    finished_at=datetime.now(UTC),
+                    candidates=[
+                        ImportCandidate(
+                            position=0,
+                            status="imported",
+                            title=recipe.title,
+                            confidence="high",
+                            recipe_payload=payload.model_dump(mode="json"),
+                            result_recipe_id=recipe.id,
+                            finished_at=datetime.now(UTC),
+                        )
+                    ],
+                )
+            ]
+            db.add(batch)
         db.commit()
         return recipe
     except Exception:

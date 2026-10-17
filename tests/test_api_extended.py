@@ -396,7 +396,7 @@ def test_import_json_success_and_validation_error(monkeypatch: pytest.MonkeyPatc
     recipe = _recipe()
     db = FakeDB()
     payload = b'{"schema_version":"1.1","recipe":{"title":"Suppe","base_servings":"4"}}'
-    monkeypatch.setattr(imports_api, "import_recipe_package", lambda *_args: recipe)
+    monkeypatch.setattr(imports_api, "import_recipe_package", lambda *_args, **_kwargs: recipe)
     result = asyncio.run(
         imports_api.import_json(AsyncUpload(payload), user=user, db=db)  # type: ignore[arg-type]
     )

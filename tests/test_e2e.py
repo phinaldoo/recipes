@@ -898,6 +898,7 @@ def test_mobile_import_appends_repeated_photo_selections(logged_in_page: Page) -
     page.set_viewport_size({"width": 390, "height": 844})
     page.goto(f"{BASE_URL}/importieren")
 
+    page.get_by_role("tab", name="Dateien hochladen", exact=True).click()
     file_input = page.locator("#import-files")
     selection = page.locator("[data-file-selection]")
     submit = page.get_by_role("button", name="Dateien importieren", exact=True)
@@ -1312,3 +1313,56 @@ def test_full_backup_and_restore_round_trip(
         assert forbidden.status == 403
     finally:
         member_context.close()
+
+
+def test_import_workspace_recipe_file_keeps_history_and_context(logged_in_page: Page) -> None:
+    page = logged_in_page
+    title = f"E2E Importdatei {uuid.uuid4().hex[:10]}"
+    page.goto(f"{BASE_URL}/importieren")
+    page.get_by_role("tab", name="Dateien hochladen", exact=True).click()
+    page.locator(".iw-package > summary").click()
+    page.locator("#import-json").set_input_files(
+        {
+            "name": "recipe.rezept.json",
+            "mimeType": "application/json",
+            "buffer": json.dumps(
+                {"schema_version": "1.1", "recipe": {"title": title, "base_servings": "4"}}
+            ).encode(),
+        }
+    )
+    page.locator("[data-json-import] button[type=submit]").click()
+    panel = page.locator("[data-import-dialog]")
+    expect(panel).to_be_visible()
+    expect(panel.get_by_role("heading", name="Import abgeschlossen", exact=True)).to_be_visible()
+    expect(panel.get_by_role("heading", name=title, exact=True)).to_be_visible()
+    assert "/importieren/" in page.url
+    page.keyboard.press("Escape")
+    expect(panel).not_to_be_visible()
+    expect(page.locator('[data-source-tab="file"]')).to_have_attribute("aria-selected", "true")
+    page.get_by_role("button", name="Gespeichert", exact=True).click()
+    page.get_by_role("searchbox", name="Import suchen").fill(title)
+    expect(page.locator(".iw-row")).to_have_count(1)
+    page.get_by_role("link", name=title, exact=True).click()
+    expect(panel).to_be_visible()
+    panel.get_by_role("link", name="Rezept öffnen", exact=True).first.click()
+    expect(page.get_by_role("heading", name=title, exact=True)).to_be_visible()
+
+
+def test_import_workspace_failed_upload_retains_files(logged_in_page: Page) -> None:
+    page = logged_in_page
+    page.goto(f"{BASE_URL}/importieren")
+    page.get_by_role("tab", name="Dateien hochladen", exact=True).click()
+    page.locator("#import-files").set_input_files(PROJECT_ROOT / "app/static/pwa/icon-192.png")
+    page.route(
+        "**/api/v1/imports/files",
+        lambda route: route.fulfill(
+            status=503,
+            content_type="application/json",
+            body=json.dumps({"error": {"message": "Temporär nicht verfügbar"}}),
+        ),
+    )
+    page.get_by_role("button", name="Dateien importieren", exact=True).click()
+    expect(page.locator("[data-import-message]")).to_contain_text("Temporär nicht verfügbar")
+    expect(page.locator(".file-selection__item")).to_have_count(1)
+    expect(page.get_by_role("button", name="Dateien importieren", exact=True)).to_be_enabled()
+    assert page.url.endswith("/importieren")

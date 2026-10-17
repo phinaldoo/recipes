@@ -1253,3 +1253,168 @@ def test_recipe_json_roundtrip_preserves_content_files_and_metadata(
     assert reexported["recipe"] == exported["recipe"]
     assert db.scalar(select(MediaAsset).where(MediaAsset.id == imported_image.asset.id)) is not None
     assert db.scalar(select(Recipe).where(Recipe.id == imported_id)) is not None
+
+
+def _review_batch(db: Session, user: User, title: str = "Workspace soup"):
+    from app.models import ImportBatch, ImportCandidate, ImportJob
+
+    payload = RecipeInput(
+        title=title,
+        base_servings=4,
+        ingredient_groups=[
+            IngredientGroupInput(
+                ingredients=[IngredientInput(name="Potatoes", amount_min=500, unit="g")]
+            )
+        ],
+        instruction_steps=[InstructionStepInput(text="Cook the potatoes.")],
+    )
+    candidate = ImportCandidate(
+        position=0,
+        status="ready",
+        title=title,
+        confidence="high",
+        recipe_payload=payload.model_dump(mode="json"),
+    )
+    batch = ImportBatch(
+        created_by_user_id=user.id,
+        status="review",
+        total_jobs=1,
+        completed_jobs=0,
+        failed_jobs=0,
+        jobs=[
+            ImportJob(
+                input_type="url",
+                status="review",
+                source_url="https://example.test/soup",
+                candidates=[candidate],
+            )
+        ],
+    )
+    db.add(batch)
+    db.flush()
+    return batch, candidate
+
+
+def test_import_workspace_confirmation_applies_validated_edits_atomically(db: Session) -> None:
+    from app.api.imports import ImportSelectionPayload, confirm_candidates
+
+    user = _user(db, "Import editor")
+    batch, candidate = _review_batch(db, user)
+    source = MediaAsset(
+        kind="original_upload",
+        storage_key=f"test-import/{uuid.uuid4()}.pdf",
+        original_filename="source.pdf",
+        mime_type="application/pdf",
+        byte_size=100,
+        sha256="0" * 64,
+        uploaded_by_user_id=user.id,
+    )
+    db.add(source)
+    db.flush()
+    batch.jobs[0].source_asset = source
+    db.flush()
+    updated = RecipeInput.model_validate(
+        {**candidate.recipe_payload, "title": "Corrected soup", "base_servings": "2.5"}
+    )
+    updated.ingredient_groups[0].ingredients[0].amount_min = Decimal("750")
+    result = confirm_candidates(
+        batch.id,
+        ImportSelectionPayload(
+            selected_candidate_ids=[candidate.id], candidate_updates={candidate.id: updated}
+        ),
+        user=user,
+        db=db,
+    )
+    recipe = db.get(Recipe, uuid.UUID(result["recipe_ids"][0]))
+    assert recipe.title == "Corrected soup"
+    assert recipe.base_servings == Decimal("2.5")
+    assert candidate.recipe_payload["ingredient_groups"][0]["ingredients"][0]["amount_min"] == "750"
+    assert candidate.status == "imported"
+    with pytest.raises(HTTPException) as exc:
+        confirm_candidates(
+            batch.id,
+            ImportSelectionPayload(selected_candidate_ids=[candidate.id]),
+            user=user,
+            db=db,
+        )
+    assert exc.value.status_code == 409
+
+
+@pytest.mark.parametrize("foreign", [False, True])
+def test_import_workspace_rejects_foreign_or_unselected_edits(db: Session, foreign: bool) -> None:
+    from app.api.imports import ImportSelectionPayload, confirm_candidates
+
+    user = _user(db, "Import owner")
+    other = _user(db, "Other import owner")
+    batch, candidate = _review_batch(db, user)
+    _, other_candidate = _review_batch(db, other, "Private import")
+    edited = other_candidate if foreign else candidate
+    with pytest.raises(HTTPException) as exc:
+        confirm_candidates(
+            batch.id,
+            ImportSelectionPayload(
+                selected_candidate_ids=[edited.id] if foreign else [],
+                candidate_updates={edited.id: RecipeInput.model_validate(edited.recipe_payload)},
+            ),
+            user=user,
+            db=db,
+        )
+    assert exc.value.status_code == 409
+    assert candidate.status == "ready"
+    assert other_candidate.status == "ready"
+
+
+def test_import_workspace_search_pagination_and_owner_scope(db: Session) -> None:
+    from app.services.import_workspace import workspace_batches
+
+    user = _user(db, "Workspace owner")
+    other = _user(db, "Private owner")
+    for index in range(32):
+        _review_batch(db, user, f"Page recipe {index}")
+    _review_batch(db, other, "Private source")
+    special, _ = _review_batch(db, user, "100% special_soup")
+    db.flush()
+    first = workspace_batches(db, user)
+    second = workspace_batches(db, user, offset=first["next_offset"])
+    assert len(first["batches"]) == 30
+    assert len(second["batches"]) == 3
+    assert {b.id for b in first["batches"]}.isdisjoint(b.id for b in second["batches"])
+    assert all(b.created_by_user_id == user.id for b in first["batches"] + second["batches"])
+    assert workspace_batches(db, user, query="Private")["batches"] == []
+    assert workspace_batches(db, user, query="% special_")["batches"] == [special]
+    assert workspace_batches(db, user, filter_name="saved")["batches"] == []
+    assert len(workspace_batches(db, user, filter_name="attention")["batches"]) == 30
+
+
+def test_import_workspace_duplicate_hints_ignore_deleted_recipes(db: Session) -> None:
+    from app.services.import_workspace import duplicate_candidates
+
+    user = _user(db, "Duplicate review")
+    batch, candidate = _review_batch(db, user, f"Unique duplicate {uuid.uuid4().hex}")
+    recipe = create_recipe(db, RecipeInput(title=candidate.title.upper(), base_servings=4), user)
+    db.flush()
+    assert duplicate_candidates(db, batch) == {str(candidate.id): str(recipe.id)}
+    recipe.deleted_at = datetime.now(UTC)
+    db.flush()
+    assert duplicate_candidates(db, batch) == {}
+
+
+def test_recipe_file_import_records_receipt_in_same_transaction(db: Session) -> None:
+    from app.models import ImportBatch
+    from app.services.import_workspace import workspace_batches
+
+    user = _user(db, "Package import")
+    batch = ImportBatch(
+        created_by_user_id=user.id,
+        status="completed",
+        total_jobs=1,
+        completed_jobs=1,
+        failed_jobs=0,
+    )
+    package = RecipePackage.model_validate(
+        {"schema_version": "1.1", "recipe": {"title": "Package receipt", "base_servings": "4"}}
+    )
+    recipe = import_recipe_package(db, package, user, batch=batch)
+    assert batch.jobs[0].result_recipe_id == recipe.id
+    assert batch.jobs[0].candidates[0].status == "imported"
+    assert workspace_batches(db, user, filter_name="saved", query="receipt")["batches"] == [batch]

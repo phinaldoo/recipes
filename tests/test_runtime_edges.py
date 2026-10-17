@@ -1256,7 +1256,7 @@ def test_main_recipe_and_admin_pages_delegate_correctly(
     assert template.call_args.args[2] == "recipes/form.html"
     main.recipe_detail_page(recipe.id, request, user, cast(Session, db))
     assert template.call_args.args[2] == "recipes/detail.html"
-    main.import_page(request, user, cast(Session, db))
+    main.import_page(request, user, cast(Session, db), q="", filter="all")
     main.categories_page(request, user, cast(Session, db))
 
     main.edit_recipe_page(recipe.id, request, user, cast(Session, db))
@@ -1314,18 +1314,10 @@ def test_main_print_import_batch_and_settings_access(
         admin,
         cast(Session, FakeDatabase(scalar_values=[other_batch])),
     )
-    assert template_response.call_args.args[1] == "imports/batch.html"
+    assert template_response.call_args.args[1] == "imports/index.html"
+    assert template_response.call_args.args[2]["open_batch_id"] == str(batch_id)
 
-    active_batch = ImportBatch(
-        id=uuid.uuid4(), created_by_user_id=user.id, status="processing", total_jobs=2
-    )
-    main.running_imports_page(
-        request,
-        user,
-        cast(Session, FakeDatabase(scalars_values=[[active_batch]])),
-    )
-    assert template_response.call_args.args[1] == "imports/running.html"
-    assert template_response.call_args.args[2]["batches"] == [active_batch]
+    assert main.legacy_import_page(user).headers["location"] == "/importieren"
 
     job = BackupRestoreJob(id=uuid.uuid4(), operation="export", status="completed")
     settings_db = FakeDatabase(scalars_values=[[job]])

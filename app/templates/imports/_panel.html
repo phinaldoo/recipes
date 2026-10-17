@@ -1,0 +1,19 @@
+{% from '_ui.html' import icon %}
+{% from 'imports/_job_card.html' import job_card with context %}
+{% from 'imports/_review_card.html' import review_card with context %}
+<div class="iw-panel" data-panel-batch="{{ batch.id }}" data-panel-state="{{ batch.status }}{% for job in batch.jobs %}|{{ job.id }}:{{ job.status }}{% for c in job.candidates %}:{{ c.id }}:{{ c.status }}{% endfor %}{% endfor %}" data-review="{{ 'true' if batch.status == 'review' else 'false' }}">
+  <header class="iw-panel-head"><h2 id="iw-dialog-title">{{ t('workspace.review') if batch.status == 'review' else t('import.preparing_title') if batch.status in ['queued','processing'] else t('import.completed_title') }}</h2><button type="button" class="icon-button" data-close-import aria-label="{{ t('common.close') }}">{{ icon('close') }}</button></header>
+  <div class="iw-panel-body">
+    {% if batch.status == 'review' %}
+    <div class="iw-review-toolbar"><strong>{{ t('import.found_recipes') }}</strong><button class="button button--text" type="button" data-toggle-candidates>{{ t('common.select_all') }}</button></div>
+    {% endif %}
+    <form novalidate data-review-form id="iw-review-form">
+      {% for job in batch.jobs %}{% for candidate in job.candidates %}{{ review_card(candidate, job) }}{% endfor %}{% endfor %}
+    </form>
+    {% if batch.status == 'review' %}<p class="iw-hint">{{ t('workspace.draft') }}</p>{% endif %}
+    <details class="iw-originals" {% if batch.status != 'review' %}open{% endif %}><summary>{{ t('workspace.originals') }}</summary><div class="job-list">{% for job in batch.jobs %}{{ job_card(job, 'h3') }}{% endfor %}</div></details>
+    {% if batch.status in ['queued','processing'] %}<p class="iw-hint">{{ t('import.auto_update') }}</p>{% endif %}
+    <div class="alert" data-panel-error role="alert" hidden></div>
+  </div>
+  <footer class="iw-panel-footer"><span class="iw-hint" data-selected-count></span><div class="button-group"><button class="button button--text" type="button" data-close-import>{{ t('import.decide_later') if batch.status == 'review' else t('common.close') }}</button>{% if batch.status == 'review' %}<button class="button button--primary" type="submit" form="iw-review-form" data-save-candidates>{{ t('import.confirm_selected') }}</button>{% else %}<a class="button button--primary" href="/rezepte">{{ t('nav.recipes') }}{{ icon('arrow') }}</a>{% endif %}</div></footer>
+</div>

@@ -1,6 +1,6 @@
 {% macro job_card(job, heading_level='h2') %}
 {% set source_name = job.source_url or (job.source_asset.original_filename if job.source_asset else t('import.source_file')) %}
-<article class="job-card" data-job-id="{{ job.id }}">
+<article class="job-card" data-job-id="{{ job.id }}" data-job-state="{{ job.status }}">
   {% if job.source_asset and job.source_asset.mime_type.startswith('image/') %}
   <a class="job-card__preview" href="/api/v1/imports/jobs/{{ job.id }}/source" target="_blank" rel="noopener" aria-label="{{ t('import.open_original_image') }}">
     <img src="/api/v1/imports/jobs/{{ job.id }}/source" alt="{{ t('import.preview_of', name=job.source_asset.original_filename) }}">
