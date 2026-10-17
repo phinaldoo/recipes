@@ -1,6 +1,6 @@
 # Import workspace visual proof
 
-Screenshots of the real FastAPI application rendered in Linux Chromium at 1440 px and 390 px widths. The app uses seeded demonstration imports and food photos; no production data is shown.
+Screenshots of the real FastAPI application rendered in Chromium at 1440 px and 390 px widths. The app uses seeded demonstration imports and food photos; no production data is shown.
 
 - `workspace-*`: the combined composer, searchable history, and status filters.
 - `upload-*`: photos/PDF upload and the recipe-package option.
