@@ -2,7 +2,7 @@
 
 A self-hosted recipe manager for households and small groups. Keep a shared collection, import recipes from photos, PDFs and websites, and use it on your phone as an installable web app.
 
-![Recipes start page with six illustrated cooking and baking recipes, category labels, favorites and search.](docs/images/recipes-splash.png)
+![Recipe collection with sidebar navigation, search, and compact icon-only cooking, baking, and favorite controls.](docs/images/recipes-splash.png)
 
 Built with FastAPI, PostgreSQL, Redis/Dramatiq and Caddy. Available in English, German, Spanish, Hindi and Simplified Chinese.
 
@@ -16,6 +16,19 @@ Built with FastAPI, PostgreSQL, Redis/Dramatiq and Caddy. Available in English, 
 - Full backups and validated restores, including original files.
 
 All active members can access the shared recipe collection. There is no public registration. The PWA caches app assets, not private recipes or media.
+
+<details>
+<summary>See the import workspace and mobile review</summary>
+
+Add links, photos, PDFs, or recipe files in one workspace. Follow progress, find previous imports, and review or edit recipes before saving.
+
+![Import workspace with link and file inputs, searchable history, and review status.](docs/images/import-workspace/workspace-1440.png)
+
+<img src="docs/images/import-workspace/review-390.png" width="390" alt="Mobile recipe review with duplicate detection, recipe selection, inline editing, and save controls.">
+
+Screenshots use demonstration data.
+
+</details>
 
 ## Quick start
 
