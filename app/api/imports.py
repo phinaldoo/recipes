@@ -24,7 +24,7 @@ from app.imports.source_media import SourceRegionError, crop_source_region, norm
 from app.imports.url_security import UnsafeURL, validate_public_url
 from app.models import ImportBatch, ImportCandidate, ImportJob, User
 from app.schemas.ai import RecipeImageCandidate, RecipeSourceRegion
-from app.schemas.recipe import RecipePackage
+from app.schemas.recipe import RecipeInput, RecipePackage
 from app.services.media import create_asset
 from app.services.media_quota import MediaQuotaExceeded
 from app.services.storage import (
@@ -46,6 +46,7 @@ class URLImportPayload(BaseModel):
 
 class ImportSelectionPayload(BaseModel):
     selected_candidate_ids: list[uuid.UUID] = Field(default_factory=list, max_length=400)
+    candidate_updates: dict[uuid.UUID, RecipeInput] = Field(default_factory=dict, max_length=400)
 
 
 def _ensure_import_capacity(db: Session, user: User, requested: int) -> None:
@@ -144,9 +145,18 @@ async def import_json(
         raise HTTPException(status_code=413, detail="Das Rezeptpaket ist zu groß.")
     try:
         package = RecipePackage.model_validate_json(content)
-        recipe = import_recipe_package(db, package, user)
+        batch = ImportBatch(
+            created_by_user_id=user.id,
+            status="completed",
+            total_jobs=1,
+            completed_jobs=1,
+            failed_jobs=0,
+            target_language=user.language or "de",
+        )
+        recipe = import_recipe_package(db, package, user, batch=batch)
         return {
             "recipe_id": str(recipe.id),
+            "batch_id": str(batch.id),
             "redirect": f"/rezepte/{recipe.id}",
             "message": translate(user.language, "api.import.package"),
         }
@@ -382,6 +392,28 @@ def confirm_candidates(
         raise HTTPException(status_code=404, detail="Der Import wurde nicht gefunden.")
     _check_batch_access(batch, user)
     try:
+        if payload.candidate_updates:
+            if not set(payload.candidate_updates) <= set(payload.selected_candidate_ids):
+                raise ImportSelectionError(
+                    "Mindestens ein ausgewähltes Rezept ist nicht mehr importierbar"
+                )
+            editable = {
+                candidate.id: candidate
+                for candidate in db.scalars(
+                    select(ImportCandidate)
+                    .join(ImportJob)
+                    .where(ImportJob.batch_id == batch.id)
+                    .with_for_update()
+                )
+            }
+            for candidate_id, updated in payload.candidate_updates.items():
+                candidate = editable.get(candidate_id)
+                if candidate is None or candidate.status != "ready" or batch.status != "review":
+                    raise ImportSelectionError(
+                        "Mindestens ein ausgewähltes Rezept ist nicht mehr importierbar"
+                    )
+                candidate.recipe_payload = updated.model_dump(mode="json")
+                candidate.title = updated.title
         recipes, cleanup_paths = import_selected_candidates(
             db,
             batch=batch,

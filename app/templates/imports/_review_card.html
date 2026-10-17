@@ -1,0 +1,32 @@
+{% from '_ui.html' import icon %}
+{% macro review_card(candidate, job) %}
+{% set payload = candidate.recipe_payload or {} %}
+{% set ready = candidate.status == 'ready' and batch.status == 'review' %}
+{% if candidate.status in ['ready','imported','failed'] %}
+<article class="iw-candidate" data-candidate-id="{{ candidate.id }}">
+  <div class="iw-candidate-head">
+    {% if ready %}<label class="iw-select"><input type="checkbox" data-candidate-select value="{{ candidate.id }}" {% if candidate.id|string not in duplicates %}checked{% endif %}><span class="sr-only">{{ t('import.candidate_select', title=candidate.title) }}</span></label>{% endif %}
+    {% if candidate.image_asset_id or candidate.image_region_json %}<img class="iw-candidate-photo" src="/api/v1/imports/candidates/{{ candidate.id }}/image" alt="" loading="lazy">{% else %}<span class="iw-candidate-photo iw-photo-empty">{{ icon('book') }}</span>{% endif %}
+    <div class="iw-candidate-info"><h3>{{ candidate.title }}</h3><p>{{ t('recipes.kind.' ~ payload.get('recipe_kind', 'cooking')) }}{% if payload.get('base_servings') %} · {{ payload.get('base_servings') }} {{ payload.get('serving_label', default_serving_label) }}{% endif %}</p>
+      {% if candidate.id|string in duplicates %}<a class="iw-duplicate" href="/rezepte/{{ duplicates[candidate.id|string] }}" target="_blank" rel="noopener">{{ icon('book') }}{{ t('workspace.duplicate') }}</a>{% endif %}
+      {% if ready and (candidate.warnings_json or candidate.confidence != 'high') %}<span class="iw-candidate-note">{{ t('import.candidate.check') }}</span>{% endif %}
+      {% if candidate.result_recipe_id %}<a class="text-link" href="/rezepte/{{ candidate.result_recipe_id }}">{{ t('import.open_recipe') }}</a>{% endif %}
+    </div>
+  </div>
+  {% if candidate.error_message %}<p class="alert alert--error">{{ ui_text(candidate.error_message, 'error.generic') }}</p>{% endif %}
+  {% if ready %}
+  <script type="application/json" data-candidate-payload>{{ payload|tojson }}</script>
+  <details class="iw-editor"><summary>{{ t('workspace.preview') }}{{ icon('chevron') }}</summary>
+    {% if candidate.warnings_json %}<ul class="iw-warnings">{% for warning in candidate.warnings_json %}<li>{{ ui_text(warning, 'import.warning.generic') }}</li>{% endfor %}</ul>{% endif %}
+    <p class="iw-hint">{{ t('workspace.source_hint') }} {% if job.source_asset %}<a href="/api/v1/imports/jobs/{{ job.id }}/source" target="_blank" rel="noopener">{{ t('import.open_original') }}</a>{% endif %}</p>
+    <div class="iw-editor-grid"><label class="field">{{ t('form.title') }}<input data-edit="title" maxlength="300" value="{{ candidate.title }}" required></label><label class="field">{{ t('form.base_servings') }}<input data-edit="base_servings" inputmode="decimal" value="{{ payload.get('base_servings', 1) }}" required></label></div>
+    {% for group in payload.get('ingredient_groups', []) %}{% set group_index = loop.index0 %}
+    <fieldset class="iw-ingredients"><legend>{{ group.get('title') or t('recipe.ingredients') }}</legend>{% for ingredient in group.get('ingredients', []) %}
+      <div class="iw-ingredient" data-group="{{ group_index }}" data-ingredient="{{ loop.index0 }}"><label>{{ t('form.amount') }}<input data-ingredient-edit="amount_min" inputmode="decimal" value="{{ ingredient.get('amount_min') if ingredient.get('amount_min') is not none else '' }}"></label><label>{{ t('form.to') }}<input data-ingredient-edit="amount_max" inputmode="decimal" value="{{ ingredient.get('amount_max') if ingredient.get('amount_max') is not none else '' }}"></label><label>{{ t('form.unit') }}<input data-ingredient-edit="unit" maxlength="80" value="{{ ingredient.get('unit') or '' }}"></label><label class="iw-ingredient-name">{{ t('form.ingredient') }}<input data-ingredient-edit="name" maxlength="500" value="{{ ingredient.get('name') }}" required></label></div>
+    {% endfor %}</fieldset>{% endfor %}
+    <div class="iw-steps">{% for step in payload.get('instruction_steps', []) %}<label class="field">{{ t('form.step', number=loop.index) }}<textarea data-step-edit="{{ loop.index0 }}" rows="3" required>{{ step.get('text') }}</textarea></label>{% endfor %}</div>
+  </details>
+  {% endif %}
+</article>
+{% endif %}
+{% endmacro %}

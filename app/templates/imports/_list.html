@@ -1,0 +1,15 @@
+{% from '_ui.html' import icon %}
+{% for batch in batches %}
+{% set first = batch.jobs|first %}
+{% set ready = namespace(count=0) %}{% for job in batch.jobs %}{% for c in job.candidates %}{% if c.status == 'ready' %}{% set ready.count = ready.count + 1 %}{% endif %}{% endfor %}{% endfor %}
+<article class="iw-row {% if ready.count %}iw-row--review{% endif %}" data-batch-id="{{ batch.id }}" {% if batch.status in ['queued','processing'] %}data-batch-poll{% endif %}>
+  <span class="iw-source-icon">{{ icon('link' if first and first.input_type == 'url' else 'package' if first and first.input_type == 'recipe_json' else 'note') }}</span>
+  <div class="iw-row-main"><a class="iw-row-title" href="/importieren/{{ batch.id }}" data-open-import="{{ batch.id }}">{% if first and first.source_url %}{{ first.source_url }}{% elif first and first.source_asset %}{{ first.source_asset.original_filename }}{% elif first and first.candidates %}{{ first.candidates[0].title }}{% else %}{{ t('import.package_title') if first and first.input_type == 'recipe_json' else t('import.source_file') }}{% endif %}{% if batch.total_jobs > 1 %} <span class="muted">+ {{ batch.total_jobs - 1 }}</span>{% endif %}</a>
+    <div class="iw-row-meta"><span class="{% if batch.failed_jobs %}iw-error-text{% endif %}">{% if ready.count %}{{ t('workspace.review') }} · {{ ready.count }}{% elif batch.status in ['queued','processing'] %}{{ t('workspace.processing') }}{% elif batch.failed_jobs %}{{ t('import.status.completed_errors') }}{% else %}{{ t('import.status.completed') }}{% endif %}</span><span aria-hidden="true">·</span><time datetime="{{ batch.created_at.isoformat() }}">{{ batch.created_at|datetime }}</time></div>
+  </div>
+  <a class="button {{ 'button--primary' if ready.count else 'button--text' }}" href="/importieren/{{ batch.id }}" data-open-import="{{ batch.id }}">{{ t('workspace.review') if ready.count else t('workspace.view') }}{{ icon('arrow') }}</a>
+</article>
+{% else %}
+<div class="empty-state iw-empty"><div class="iw-empty-mark">{{ icon('upload') }}</div><h3>{{ t('workspace.no_results') if import_query or import_filter != 'all' else t('workspace.empty') }}</h3><p>{{ t('workspace.empty_hint') }}</p>{% if import_query or import_filter != 'all' %}<button class="button button--secondary" type="button" data-clear-import-filters>{{ t('workspace.clear') }}</button>{% endif %}</div>
+{% endfor %}
+{% if next_offset is not none %}<button class="button button--secondary iw-load-more" type="button" data-more-imports="{{ next_offset }}">{{ t('workspace.more') }}</button>{% endif %}

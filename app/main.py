@@ -7,7 +7,7 @@ import uuid
 from collections.abc import AsyncIterator
 from datetime import datetime
 from pathlib import Path
-from typing import Any, cast
+from typing import Annotated, Any, cast
 from urllib.parse import quote
 
 from fastapi import Depends, FastAPI, Form, HTTPException, Query, Request, Response
@@ -79,6 +79,7 @@ from app.services.image_generation import (
     image_generation_available,
     requeue_stale_image_generation_jobs,
 )
+from app.services.import_workspace import duplicate_candidates, workspace_batches
 from app.services.media_quota import cleanup_terminal_import_sources
 from app.services.productivity import favorite_recipe_ids
 from app.services.recipes import get_recipe, list_recipes
@@ -323,6 +324,7 @@ def _page_context(request: Request, db: Session) -> dict[str, object]:
         "current_user": session.user,
         "csrf_token": session.csrf_token,
         "app_version": __version__,
+        "import_max_mb": settings.max_upload_mb,
         "pwa_enabled": settings.pwa_enabled,
         "pwa_manifest_url": f"{frontend_assets.manifest_url}&lang={locale}",
     }
@@ -852,60 +854,40 @@ def print_recipe_page(
 @app.get("/importieren", response_class=HTMLResponse)
 def import_page(
     request: Request,
-    _: User = Depends(current_user),
+    user: User = Depends(current_user),
     db: Session = Depends(get_db),
+    q: Annotated[str, Query(max_length=200)] = "",
+    filter: Annotated[str, Query(pattern="^(all|attention|saved)$")] = "all",
 ) -> HTMLResponse:
-    return _template(request, db, "imports/index.html")
+    return _template(
+        request, db, "imports/index.html", workspace_batches(db, user, query=q, filter_name=filter)
+    )
 
 
-@app.get("/importieren/laufend", response_class=HTMLResponse)
-def running_imports_page(
+@app.get("/importieren/liste", response_class=HTMLResponse)
+def import_list(
     request: Request,
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
+    q: Annotated[str, Query(max_length=200)] = "",
+    filter: Annotated[str, Query(pattern="^(all|attention|saved)$")] = "all",
+    offset: int = Query(default=0, ge=0, le=100_000),
 ) -> HTMLResponse:
-    context = _page_context(request, db)
-    batches = list(
-        db.scalars(
-            select(ImportBatch)
-            .where(
-                ImportBatch.created_by_user_id == user.id,
-                ImportBatch.status.in_(("queued", "processing", "review")),
-            )
-            .order_by(ImportBatch.created_at.desc(), ImportBatch.id.desc())
-        )
+    return _template(
+        request,
+        db,
+        "imports/_list.html",
+        workspace_batches(db, user, query=q, filter_name=filter, offset=offset),
     )
-    context.update({"batches": batches})
-    return templates.TemplateResponse(request, "imports/running.html", context)
 
 
-@app.get("/importieren/verlauf", response_class=HTMLResponse)
-def import_history_page(
-    request: Request,
-    user: User = Depends(current_user),
-    db: Session = Depends(get_db),
-) -> HTMLResponse:
-    context = _page_context(request, db)
-    batches = list(
-        db.scalars(
-            select(ImportBatch)
-            .options(selectinload(ImportBatch.jobs).selectinload(ImportJob.source_asset))
-            .where(ImportBatch.created_by_user_id == user.id)
-            .order_by(ImportBatch.created_at.desc(), ImportBatch.id.desc())
-        )
-    )
-    context.update({"batches": batches})
-    return templates.TemplateResponse(request, "imports/history.html", context)
+@app.get("/importieren/laufend")
+@app.get("/importieren/verlauf")
+def legacy_import_page(_: User = Depends(current_user)) -> RedirectResponse:
+    return RedirectResponse("/importieren", status_code=303)
 
 
-@app.get("/importieren/{batch_id}", response_class=HTMLResponse)
-def import_batch_page(
-    batch_id: uuid.UUID,
-    request: Request,
-    _: User = Depends(current_user),
-    db: Session = Depends(get_db),
-) -> HTMLResponse:
-    context = _page_context(request, db)
+def _accessible_import(db: Session, batch_id: uuid.UUID, user: User) -> ImportBatch:
     batch = db.scalar(
         select(ImportBatch)
         .options(
@@ -916,13 +898,48 @@ def import_batch_page(
     )
     if batch is None:
         raise HTTPException(status_code=404, detail="Der Import wurde nicht gefunden.")
-    user = cast(User, context["current_user"])
     if batch.created_by_user_id != user.id and user.role != "admin":
         raise HTTPException(
             status_code=403, detail="Dieser Import gehört zu einem anderen Benutzer."
         )
-    context.update({"batch": batch})
-    return templates.TemplateResponse(request, "imports/batch.html", context)
+    return batch
+
+
+@app.get("/importieren/{batch_id}/panel", response_class=HTMLResponse)
+def import_panel(
+    batch_id: uuid.UUID,
+    request: Request,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+) -> HTMLResponse:
+    batch = _accessible_import(db, batch_id, user)
+    return _template(
+        request,
+        db,
+        "imports/_panel.html",
+        {"batch": batch, "duplicates": duplicate_candidates(db, batch)},
+    )
+
+
+@app.get("/importieren/{batch_id}", response_class=HTMLResponse)
+def import_batch_page(
+    batch_id: uuid.UUID,
+    request: Request,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+    q: Annotated[str, Query(max_length=200)] = "",
+    filter: Annotated[str, Query(pattern="^(all|attention|saved)$")] = "all",
+) -> HTMLResponse:
+    _accessible_import(db, batch_id, user)
+    return _template(
+        request,
+        db,
+        "imports/index.html",
+        {
+            **workspace_batches(db, user, query=q, filter_name=filter),
+            "open_batch_id": str(batch_id),
+        },
+    )
 
 
 @app.get("/kategorien", response_class=HTMLResponse)

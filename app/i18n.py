@@ -4188,6 +4188,237 @@ for _message_key, _translations in _API_MESSAGE_ROWS.items():
         MESSAGES[_message_locale][_message_key] = _message
 
 
+_IMPORT_WORKSPACE_MESSAGES: Final[dict[str, tuple[str, str, str, str, str]]] = {
+    "workspace.add": (
+        "Add to your recipes",
+        "Deine Rezepte ergänzen",
+        "添加到你的食谱",
+        "अपनी रेसिपी में जोड़ें",
+        "Añade a tus recetas",
+    ),
+    "workspace.link": (
+        "Paste a link",
+        "Link einfügen",
+        "粘贴链接",
+        "लिंक पेस्ट करें",
+        "Pegar un enlace",
+    ),
+    "workspace.files": (
+        "Upload files",
+        "Dateien hochladen",
+        "上传文件",
+        "फ़ाइलें अपलोड करें",
+        "Subir archivos",
+    ),
+    "workspace.link_placeholder": (
+        "Paste a recipe link…",
+        "Rezeptlink einfügen…",
+        "粘贴食谱链接…",
+        "रेसिपी का लिंक पेस्ट करें…",
+        "Pega un enlace de receta…",
+    ),
+    "workspace.javascript": (
+        "Enable JavaScript to import and review recipes.",
+        "Aktiviere JavaScript, um Rezepte zu importieren und zu prüfen.",
+        "请启用 JavaScript 以导入和检查食谱。",
+        "रेसिपी आयात करने और जाँचने के लिए JavaScript चालू करें।",
+        "Activa JavaScript para importar y revisar recetas.",
+    ),
+    "workspace.save_one": (
+        "Save 1 recipe",
+        "1 Rezept speichern",
+        "保存 1 个食谱",
+        "1 रेसिपी सहेजें",
+        "Guardar 1 receta",
+    ),
+    "workspace.link_hint": (
+        "One link or a whole list. We’ll find the recipes.",
+        "Ein Link oder eine ganze Liste. Wir finden die Rezepte.",
+        "一个链接或一整份列表，我们来查找食谱。",
+        "एक लिंक या पूरी सूची। हम रेसिपी ढूँढ लेंगे।",
+        "Un enlace o toda una lista. Encontraremos las recetas.",
+    ),
+    "workspace.drop": (
+        "Drop files here, or choose files",
+        "Dateien hier ablegen oder auswählen",
+        "将文件拖到这里，或选择文件",
+        "फ़ाइलें यहाँ छोड़ें या चुनें",
+        "Arrastra archivos aquí o elige archivos",
+    ),
+    "workspace.file_hint": (
+        "Photos & PDFs · add multiple pages together",
+        "Fotos & PDFs · mehrere Seiten gemeinsam hinzufügen",
+        "照片和 PDF · 可一次添加多页",
+        "फ़ोटो और PDF · कई पेज एक साथ जोड़ें",
+        "Fotos y PDF · añade varias páginas juntas",
+    ),
+    "workspace.package": (
+        "Import a recipe file (.json)",
+        "Rezeptdatei importieren (.json)",
+        "导入食谱文件 (.json)",
+        "रेसिपी फ़ाइल आयात करें (.json)",
+        "Importar un archivo de receta (.json)",
+    ),
+    "workspace.imports": (
+        "Your imports",
+        "Deine Importe",
+        "你的导入",
+        "आपके आयात",
+        "Tus importaciones",
+    ),
+    "workspace.all": ("All", "Alle", "全部", "सभी", "Todas"),
+    "workspace.attention": (
+        "Needs attention",
+        "Zu prüfen",
+        "待处理",
+        "ध्यान देने योग्य",
+        "Por revisar",
+    ),
+    "workspace.saved": ("Saved", "Gespeichert", "已保存", "सहेजा गया", "Guardadas"),
+    "workspace.search": (
+        "Find an import",
+        "Import suchen",
+        "查找导入",
+        "आयात खोजें",
+        "Buscar una importación",
+    ),
+    "workspace.review": (
+        "Review recipes",
+        "Rezepte prüfen",
+        "检查食谱",
+        "रेसिपी की समीक्षा करें",
+        "Revisar recetas",
+    ),
+    "workspace.view": ("View", "Ansehen", "查看", "देखें", "Ver"),
+    "workspace.more": (
+        "Load more imports",
+        "Weitere Importe laden",
+        "加载更多导入",
+        "और आयात लोड करें",
+        "Cargar más importaciones",
+    ),
+    "workspace.empty": (
+        "Your next favorite starts here",
+        "Hier beginnt dein nächstes Lieblingsrezept",
+        "下一个心爱食谱从这里开始",
+        "आपकी अगली पसंदीदा रेसिपी यहीं से शुरू होती है",
+        "Tu próxima receta favorita empieza aquí",
+    ),
+    "workspace.empty_hint": (
+        "Paste a link or add a photo. Review the recipes, then save the ones you love.",
+        "Füge einen Link oder ein Foto hinzu. Prüfe die Rezepte und speichere deine Favoriten.",
+        "粘贴链接或添加照片，检查食谱后保存喜欢的。",
+        "लिंक पेस्ट करें या फ़ोटो जोड़ें। रेसिपी जाँचें और अपनी पसंद की सहेजें।",
+        "Pega un enlace o añade una foto. Revisa las recetas y guarda las que te gusten.",
+    ),
+    "workspace.no_results": (
+        "No matching imports",
+        "Keine passenden Importe",
+        "没有匹配的导入",
+        "कोई मेल खाता आयात नहीं",
+        "No hay importaciones coincidentes",
+    ),
+    "workspace.clear": (
+        "Show all imports",
+        "Alle Importe anzeigen",
+        "显示所有导入",
+        "सभी आयात दिखाएँ",
+        "Mostrar todas las importaciones",
+    ),
+    "workspace.preview": (
+        "Preview & edit",
+        "Ansehen & bearbeiten",
+        "预览和编辑",
+        "पूर्वावलोकन और संपादन",
+        "Vista previa y edición",
+    ),
+    "workspace.duplicate": (
+        "Same title already in your collection",
+        "Gleicher Titel bereits in deiner Sammlung",
+        "收藏中已有同名食谱",
+        "आपके संग्रह में इसी नाम की रेसिपी है",
+        "Ya hay una receta con el mismo título",
+    ),
+    "workspace.draft": (
+        "Selection and edits stay here while this page is open. They are saved with the recipes.",
+        "Auswahl und Änderungen bleiben erhalten, solange diese Seite geöffnet ist. Sie werden "
+        "mit den Rezepten gespeichert.",
+        "只要本页保持打开，选择和编辑就会保留，并随食谱一起保存。",
+        "इस पेज के खुले रहने तक चयन और बदलाव बने रहेंगे। वे रेसिपी के साथ सहेजे जाएँगे।",
+        "La selección y los cambios se mantienen mientras esta página esté abierta. Se guardan "
+        "con las recetas.",
+    ),
+    "workspace.network": (
+        "Couldn’t refresh imports. Your edits are still here. Please try again.",
+        "Importe konnten nicht aktualisiert werden. Deine Änderungen bleiben erhalten. Bitte "
+        "erneut versuchen.",
+        "无法刷新导入。你的编辑仍然保留，请重试。",
+        "आयात रीफ़्रेश नहीं हो सके। आपके बदलाव सुरक्षित हैं। फिर कोशिश करें।",
+        "No se pudieron actualizar las importaciones. Tus cambios siguen aquí. Inténtalo de nuevo.",
+    ),
+    "workspace.started": (
+        "Import started. You can keep browsing.",
+        "Import gestartet. Du kannst weiterstöbern.",
+        "导入已开始，你可以继续浏览。",
+        "आयात शुरू हो गया। आप ब्राउज़ करते रह सकते हैं।",
+        "Importación iniciada. Puedes seguir navegando.",
+    ),
+    "workspace.save": (
+        "Save {count} recipes",
+        "{count} Rezepte speichern",
+        "保存 {count} 个食谱",
+        "{count} रेसिपी सहेजें",
+        "Guardar {count} recetas",
+    ),
+    "workspace.discard": (
+        "Finish without saving",
+        "Ohne Speichern abschließen",
+        "不保存并完成",
+        "बिना सहेजे समाप्त करें",
+        "Terminar sin guardar",
+    ),
+    "workspace.originals": (
+        "Sources & progress",
+        "Quellen & Fortschritt",
+        "来源和进度",
+        "स्रोत और प्रगति",
+        "Fuentes y progreso",
+    ),
+    "workspace.source_hint": (
+        "Check uncertain details against the original below.",
+        "Prüfe unsichere Angaben anhand der Originalquelle unten.",
+        "请对照下方原始来源检查不确定的内容。",
+        "नीचे मूल स्रोत से अनिश्चित जानकारी जाँचें।",
+        "Comprueba los detalles dudosos con la fuente original de abajo.",
+    ),
+    "workspace.file_invalid": (
+        "Use JPG, PNG, WebP, HEIC or PDF. Maximum file size: {size} MB.",
+        "Verwende JPG, PNG, WebP, HEIC oder PDF. Maximale Dateigröße: {size} MB.",
+        "请使用 JPG、PNG、WebP、HEIC 或 PDF，单个文件最大 {size} MB。",
+        "JPG, PNG, WebP, HEIC या PDF चुनें। अधिकतम आकार: {size} MB।",
+        "Usa JPG, PNG, WebP, HEIC o PDF. Tamaño máximo: {size} MB.",
+    ),
+    "workspace.saved_note": (
+        "Your imports stay here, even after you save.",
+        "Deine Importe bleiben auch nach dem Speichern hier.",
+        "保存后，你的导入仍会保留在这里。",
+        "सहेजने के बाद भी आपके आयात यहीं रहते हैं।",
+        "Tus importaciones siguen aquí después de guardarlas.",
+    ),
+    "workspace.processing": (
+        "Finding your recipes…",
+        "Deine Rezepte werden erkannt…",
+        "正在查找你的食谱…",
+        "आपकी रेसिपी खोजी जा रही हैं…",
+        "Buscando tus recetas…",
+    ),
+}
+
+for _message_key, _translations in _IMPORT_WORKSPACE_MESSAGES.items():
+    for _message_locale, _message in zip(_UI_CATALOG_ORDER, _translations, strict=True):
+        MESSAGES[_message_locale][_message_key] = _message
+
+
 _KNOWN_GERMAN_TEXT_KEYS: Final[dict[str, str]] = {
     "Wartet": "job.waiting",
     "Wird verarbeitet": "job.processing",

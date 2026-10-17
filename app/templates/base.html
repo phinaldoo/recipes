@@ -41,6 +41,7 @@
         <a href="/notizen" {% if request.url.path == '/notizen' %}aria-current="page"{% endif %}>{{ icon('note') }}<span>{{ t("nav.notes") }}</span></a>
         <a href="/kategorien" {% if request.url.path == '/kategorien' %}aria-current="page"{% endif %}>{{ icon('folder') }}<span>{{ t("nav.categories") }}</span></a>
         <a href="/schlagwoerter" {% if request.url.path == '/schlagwoerter' %}aria-current="page"{% endif %}>{{ icon('tag') }}<span>{{ t("nav.tags") }}</span></a>
+        <a href="/importieren" {% if request.url.path.startswith('/importieren') %}aria-current="page"{% endif %}>{{ icon('upload') }}<span>{{ t("nav.import") }}</span></a>
         <details class="action-menu add-recipe-menu" data-dropdown>
           <summary class="button button--primary button--small">
             {{ icon("plus") }}{{ t("nav.add_recipe") }}
