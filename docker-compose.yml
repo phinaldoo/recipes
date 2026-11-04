@@ -192,7 +192,19 @@ services:
   redis:
     image: redis:8.10.2@sha256:2c2dff791878316e3b083188be0d578423b24813cdda5de0e80ea4f7b3e6bfd6
     restart: unless-stopped
-    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      # Flush each batch before acknowledging writes to reduce crash data loss.
+      - --appendfsync
+      - always
+      # Recover damaged AOF endings smaller than 4 KiB after a host crash;
+      # damage at or above this limit still requires manual inspection.
+      - --aof-load-corrupt-tail-max-size
+      - "4096"
+      - --maxmemory-policy
+      - noeviction
     expose:
       - "6379"
     volumes:
