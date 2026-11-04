@@ -113,22 +113,22 @@ Includes optional platform-specific packages; only matching binaries are install
 
 | Package | Version | Declared license |
 | --- | --- | --- |
-| [@oxc-project/types](https://www.npmjs.com/package/@oxc-project/types/v/0.147.0) | 0.147.0 | MIT |
-| [@rolldown/binding-android-arm-eabi](https://www.npmjs.com/package/@rolldown/binding-android-arm-eabi/v/1.2.6) | 1.2.6 | MIT |
-| [@rolldown/binding-android-arm64](https://www.npmjs.com/package/@rolldown/binding-android-arm64/v/1.2.6) | 1.2.6 | MIT |
-| [@rolldown/binding-darwin-arm64](https://www.npmjs.com/package/@rolldown/binding-darwin-arm64/v/1.2.6) | 1.2.6 | MIT |
-| [@rolldown/binding-darwin-x64](https://www.npmjs.com/package/@rolldown/binding-darwin-x64/v/1.2.6) | 1.2.6 | MIT |
-| [@rolldown/binding-freebsd-x64](https://www.npmjs.com/package/@rolldown/binding-freebsd-x64/v/1.2.6) | 1.2.6 | MIT |
-| [@rolldown/binding-linux-arm-gnueabihf](https://www.npmjs.com/package/@rolldown/binding-linux-arm-gnueabihf/v/1.2.6) | 1.2.6 | MIT |
-| [@rolldown/binding-linux-arm64-gnu](https://www.npmjs.com/package/@rolldown/binding-linux-arm64-gnu/v/1.2.6) | 1.2.6 | MIT |
-| [@rolldown/binding-linux-arm64-musl](https://www.npmjs.com/package/@rolldown/binding-linux-arm64-musl/v/1.2.6) | 1.2.6 | MIT |
-| [@rolldown/binding-linux-ppc64-gnu](https://www.npmjs.com/package/@rolldown/binding-linux-ppc64-gnu/v/1.2.6) | 1.2.6 | MIT |
-| [@rolldown/binding-linux-s390x-gnu](https://www.npmjs.com/package/@rolldown/binding-linux-s390x-gnu/v/1.2.6) | 1.2.6 | MIT |
-| [@rolldown/binding-linux-x64-gnu](https://www.npmjs.com/package/@rolldown/binding-linux-x64-gnu/v/1.2.6) | 1.2.6 | MIT |
-| [@rolldown/binding-linux-x64-musl](https://www.npmjs.com/package/@rolldown/binding-linux-x64-musl/v/1.2.6) | 1.2.6 | MIT |
-| [@rolldown/binding-openharmony-arm64](https://www.npmjs.com/package/@rolldown/binding-openharmony-arm64/v/1.2.6) | 1.2.6 | MIT |
-| [@rolldown/binding-win32-arm64-msvc](https://www.npmjs.com/package/@rolldown/binding-win32-arm64-msvc/v/1.2.6) | 1.2.6 | MIT |
-| [@rolldown/binding-win32-x64-msvc](https://www.npmjs.com/package/@rolldown/binding-win32-x64-msvc/v/1.2.6) | 1.2.6 | MIT |
+| [@oxc-project/types](https://www.npmjs.com/package/@oxc-project/types/v/0.156.0) | 0.156.0 | MIT |
+| [@rolldown/binding-android-arm-eabi](https://www.npmjs.com/package/@rolldown/binding-android-arm-eabi/v/1.2.16) | 1.2.16 | MIT |
+| [@rolldown/binding-android-arm64](https://www.npmjs.com/package/@rolldown/binding-android-arm64/v/1.2.16) | 1.2.16 | MIT |
+| [@rolldown/binding-darwin-arm64](https://www.npmjs.com/package/@rolldown/binding-darwin-arm64/v/1.2.16) | 1.2.16 | MIT |
+| [@rolldown/binding-darwin-x64](https://www.npmjs.com/package/@rolldown/binding-darwin-x64/v/1.2.16) | 1.2.16 | MIT |
+| [@rolldown/binding-freebsd-x64](https://www.npmjs.com/package/@rolldown/binding-freebsd-x64/v/1.2.16) | 1.2.16 | MIT |
+| [@rolldown/binding-linux-arm-gnueabihf](https://www.npmjs.com/package/@rolldown/binding-linux-arm-gnueabihf/v/1.2.16) | 1.2.16 | MIT |
+| [@rolldown/binding-linux-arm64-gnu](https://www.npmjs.com/package/@rolldown/binding-linux-arm64-gnu/v/1.2.16) | 1.2.16 | MIT |
+| [@rolldown/binding-linux-arm64-musl](https://www.npmjs.com/package/@rolldown/binding-linux-arm64-musl/v/1.2.16) | 1.2.16 | MIT |
+| [@rolldown/binding-linux-ppc64-gnu](https://www.npmjs.com/package/@rolldown/binding-linux-ppc64-gnu/v/1.2.16) | 1.2.16 | MIT |
+| [@rolldown/binding-linux-s390x-gnu](https://www.npmjs.com/package/@rolldown/binding-linux-s390x-gnu/v/1.2.16) | 1.2.16 | MIT |
+| [@rolldown/binding-linux-x64-gnu](https://www.npmjs.com/package/@rolldown/binding-linux-x64-gnu/v/1.2.16) | 1.2.16 | MIT |
+| [@rolldown/binding-linux-x64-musl](https://www.npmjs.com/package/@rolldown/binding-linux-x64-musl/v/1.2.16) | 1.2.16 | MIT |
+| [@rolldown/binding-openharmony-arm64](https://www.npmjs.com/package/@rolldown/binding-openharmony-arm64/v/1.2.16) | 1.2.16 | MIT |
+| [@rolldown/binding-win32-arm64-msvc](https://www.npmjs.com/package/@rolldown/binding-win32-arm64-msvc/v/1.2.16) | 1.2.16 | MIT |
+| [@rolldown/binding-win32-x64-msvc](https://www.npmjs.com/package/@rolldown/binding-win32-x64-msvc/v/1.2.16) | 1.2.16 | MIT |
 | [@rolldown/pluginutils](https://www.npmjs.com/package/@rolldown/pluginutils/v/1.0.1) | 1.0.1 | MIT |
 | [detect-libc](https://www.npmjs.com/package/detect-libc/v/2.1.2) | 2.1.2 | Apache-2.0 |
 | [fdir](https://www.npmjs.com/package/fdir/v/6.5.0) | 6.5.0 | MIT |
@@ -145,14 +145,14 @@ Includes optional platform-specific packages; only matching binaries are install
 | [lightningcss-linux-x64-musl](https://www.npmjs.com/package/lightningcss-linux-x64-musl/v/1.33.0) | 1.33.0 | MPL-2.0 |
 | [lightningcss-win32-arm64-msvc](https://www.npmjs.com/package/lightningcss-win32-arm64-msvc/v/1.33.0) | 1.33.0 | MPL-2.0 |
 | [lightningcss-win32-x64-msvc](https://www.npmjs.com/package/lightningcss-win32-x64-msvc/v/1.33.0) | 1.33.0 | MPL-2.0 |
-| [nanoid](https://www.npmjs.com/package/nanoid/v/3.3.18) | 3.3.18 | MIT |
+| [nanoid](https://www.npmjs.com/package/nanoid/v/3.3.20) | 3.3.20 | MIT |
 | [picocolors](https://www.npmjs.com/package/picocolors/v/1.1.1) | 1.1.1 | ISC |
 | [picomatch](https://www.npmjs.com/package/picomatch/v/4.0.7) | 4.0.7 | MIT |
-| [postcss](https://www.npmjs.com/package/postcss/v/8.5.26) | 8.5.26 | MIT |
-| [rolldown](https://www.npmjs.com/package/rolldown/v/1.2.6) | 1.2.6 | MIT |
+| [postcss](https://www.npmjs.com/package/postcss/v/8.5.32) | 8.5.32 | MIT |
+| [rolldown](https://www.npmjs.com/package/rolldown/v/1.2.16) | 1.2.16 | MIT |
 | [source-map-js](https://www.npmjs.com/package/source-map-js/v/1.2.2) | 1.2.2 | BSD-3-Clause |
 | [tinyglobby](https://www.npmjs.com/package/tinyglobby/v/0.2.17) | 0.2.17 | MIT |
-| [vite](https://www.npmjs.com/package/vite/v/8.2.2) | 8.2.2 | MIT |
+| [vite](https://www.npmjs.com/package/vite/v/8.3.5) | 8.3.5 | MIT |
 
 Build images also install tools outside these application lockfiles: npm 12.0.2
 with brace-expansion 5.0.11, ip-address 10.3.1, tar 7.5.21, and undici 6.28.1 security overrides.
