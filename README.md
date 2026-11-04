@@ -89,6 +89,14 @@ docker compose exec -T app python -m app.cli backups create
 
 Backups include password hashes and original documents. Store encrypted copies outside the host and test restores on a disposable instance. Uploads and exports enforce size, concurrency and free-space limits; adjust the settings to match your storage.
 
+### Recovery after a host crash
+
+Redis stores background jobs and temporary coordination state; recipes are stored in PostgreSQL and uploaded files in the storage volume. Redis flushes each batch of writes before acknowledging it (`appendfsync always`). This improves durability at the cost of write latency; it cannot guarantee against host or storage failures.
+
+On startup, Redis automatically discards a damaged AOF ending smaller than 4096 bytes so a small crash-related write failure does not leave it restarting indefinitely. This can lose recent Redis operations, including queued-job changes. It is a recovery tradeoff, not a guarantee of zero data loss. Damaged endings of 4096 bytes or more still require manual recovery: stop the app, worker and Redis, back up the entire Redis volume, and inspect the AOF with `redis-check-aof` before considering a repair. Do not delete data volumes to fix a startup failure.
+
+After pulling changes to the Compose configuration, apply them with `make restart` (add `PRODUCTION=1` for HTTPS deployments). To check the recovery behavior on a disposable Redis volume, run `bash scripts/test-redis-recovery.sh`. The check never mounts the running instance's volumes and does not simulate a physical host crash.
+
 ### HTTPS deployment
 
 After completing the quick-start configuration, point your domain at the server and update `.env`:

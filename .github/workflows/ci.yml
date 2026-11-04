@@ -73,6 +73,8 @@ jobs:
       - run: python -m pytest --cov=app --cov-report=term-missing --cov-fail-under=75
       - run: pip-audit
       - run: docker compose config --quiet
+      - name: Check Redis crash recovery on a disposable volume
+        run: bash scripts/test-redis-recovery.sh
 
   browser-e2e:
     needs: test
